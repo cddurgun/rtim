@@ -5,7 +5,7 @@ import playsound
 import tempfile
 
 # SETTINGS
-openai.api_key = os.getenv("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") or "BURAYA_API_KEYİNİ_KOYABİLİRSİN"
+openai.api_key = os.getenv("") or "BURAYA_API_KEYİNİ_KOYABİLİRSİN"
 
 # Functions
 
