@@ -1,58 +1,95 @@
-import argparse
 import os
-
 import openai
+import speech_recognition as sr
+import playsound
+import tempfile
 
+# SETTINGS
+openai.api_key = os.getenv("OPENAI_API_KEY") or "BURAYA_API_KEYİNİ_KOYABİLİRSİN"
 
-def transcribe_audio(audio_path: str, model: str = "whisper-1") -> str:
-    """Transcribe audio using OpenAI Whisper."""
+# Functions
 
-    with open(audio_path, "rb") as audio_file:
-        transcript = openai.audio.transcriptions.create(
-            file=audio_file,
-            model=model,
-        )
+def transcribe_from_mic():
+    recognizer = sr.Recognizer()
+    mic = sr.Microphone()
 
-    return transcript["text"]
+    print("Listening... (Speak now)")
 
+    with mic as source:
+        recognizer.adjust_for_ambient_noise(source)
+        audio = recognizer.listen(source)
 
-def synthesize_speech(text: str, output_path: str, voice: str = "alloy") -> None:
-    """Synthesize speech using OpenAI TTS."""
+    print("Processing speech...")
+    try:
+        # Use Whisper-1 API via OpenAI
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_audio:
+            tmp_audio.write(audio.get_wav_data())
+            tmp_audio.flush()
+
+            transcript = openai.audio.transcriptions.create(
+                file=open(tmp_audio.name, "rb"),
+                model="whisper-1"
+            )
+            os.unlink(tmp_audio.name)
+
+        print("You said:", transcript["text"])
+        return transcript["text"]
+
+    except Exception as e:
+        print(f"Error during transcription: {e}")
+        return ""
+
+def chat_with_gpt(user_input):
+    print("Sending to GPT...")
+    response = openai.ChatCompletion.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You are a helpful voice assistant."},
+            {"role": "user", "content": user_input}
+        ]
+    )
+    reply = response["choices"][0]["message"]["content"]
+    print("GPT says:", reply)
+    return reply
+
+def speak_text(text):
+    print("Synthesizing speech...")
     response = openai.audio.speech.create(
         input=text,
         model="tts-1",
-        voice=voice,
+        voice="alloy"
     )
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp_output:
+        tmp_output.write(response.content)
+        tmp_output.flush()
+        tmp_path = tmp_output.name
 
-    with open(output_path, "wb") as out:
-        out.write(response.content)
+    print("Playing audio...")
+    playsound.playsound(tmp_path)
+    os.unlink(tmp_path)
 
-
+# Main loop
 
 def main():
-    parser = argparse.ArgumentParser(description="STT and TTS tool")
-    parser.add_argument("--audio", help="Path to input audio file for STT", required=False)
-    parser.add_argument("--text", help="Text for TTS", required=False)
-    parser.add_argument("--output", help="Output path for synthesized speech", default="output.mp3")
-    parser.add_argument("--api-key", help="OpenAI API key (or set OPENAI_API_KEY)")
-    args = parser.parse_args()
+    print("Real-time Voice Agent started!")
+    while True:
+        try:
+            user_text = transcribe_from_mic()
+            if not user_text:
+                continue
 
-    openai.api_key = args.api_key or os.getenv("OPENAI_API_KEY")
-    if not openai.api_key:
-        parser.error("OpenAI API key not provided. Set OPENAI_API_KEY or use --api-key")
+            if user_text.lower() in ["exit", "quit", "stop"]:
+                print("Exiting Voice Agent.")
+                break
 
-    if args.audio:
-        print("Transcribing audio...")
-        transcript = transcribe_audio(args.audio)
-        print("Transcript:", transcript)
+            gpt_reply = chat_with_gpt(user_text)
+            speak_text(gpt_reply)
 
-    if args.text:
-        print("Synthesizing speech...")
-        synthesize_speech(args.text, args.output)
-        print(f"Saved synthesized speech to {args.output}")
-
+        except KeyboardInterrupt:
+            print("Stopped by user.")
+            break
+        except Exception as e:
+            print(f"Error in main loop: {e}")
 
 if __name__ == "__main__":
-    print("Speech Tool is starting...")
     main()
-
