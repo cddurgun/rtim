@@ -15,6 +15,7 @@ pygame.display.set_caption("Mario Game")
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GREEN = (0, 255, 0)
+SKY_BLUE = (135, 206, 235)
 
 # Game constants
 GRAVITY = 0.5
@@ -90,7 +91,7 @@ while running:
     camera_x = player.rect.x - SCREEN_WIDTH // 2
     camera_x = max(0, camera_x)  # Prevent camera from going off-screen
 
-    screen.fill(BLACK)
+    screen.fill(SKY_BLUE)
 
     # Draw all sprites with camera offset
     for sprite in all_sprites:
