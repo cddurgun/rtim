@@ -85,8 +85,17 @@ while running:
         if event.type == pygame.QUIT:
             running = False
     player.update(platforms)
+
+    # Camera follows player
+    camera_x = player.rect.x - SCREEN_WIDTH // 2
+    camera_x = max(0, camera_x)  # Prevent camera from going off-screen
+
     screen.fill(BLACK)
-    all_sprites.draw(screen)
+
+    # Draw all sprites with camera offset
+    for sprite in all_sprites:
+        screen.blit(sprite.image, (sprite.rect.x - camera_x, sprite.rect.y))
+
     # Update the display
     pygame.display.flip()
 
