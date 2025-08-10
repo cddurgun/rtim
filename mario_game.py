@@ -15,6 +15,9 @@ pygame.display.set_caption("Mario Game")
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
+# Game constants
+GRAVITY = 0.5
+
 # Player class
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -29,6 +32,9 @@ class Player(pygame.sprite.Sprite):
         self.jumping = False
 
     def update(self):
+        # Apply gravity
+        self.vel_y += GRAVITY
+
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
             self.vel_x = -5
@@ -44,6 +50,12 @@ class Player(pygame.sprite.Sprite):
         # Update position
         self.rect.x += self.vel_x
         self.rect.y += self.vel_y
+
+        # Ground collision
+        if self.rect.bottom >= SCREEN_HEIGHT:
+            self.rect.bottom = SCREEN_HEIGHT
+            self.vel_y = 0
+            self.jumping = False
 
 player = Player(100, SCREEN_HEIGHT - 100)
 all_sprites = pygame.sprite.Group()
@@ -63,4 +75,5 @@ while running:
 
 # Quit Pygame
 pygame.quit()
+
 
