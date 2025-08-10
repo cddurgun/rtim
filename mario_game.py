@@ -14,6 +14,7 @@ pygame.display.set_caption("Mario Game")
 # Colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
+GREEN = (0, 255, 0)
 
 # Game constants
 GRAVITY = 0.5
@@ -31,7 +32,7 @@ class Player(pygame.sprite.Sprite):
         self.vel_y = 0
         self.jumping = False
 
-    def update(self):
+    def update(self, platforms):
         # Apply gravity
         self.vel_y += GRAVITY
 
@@ -51,15 +52,31 @@ class Player(pygame.sprite.Sprite):
         self.rect.x += self.vel_x
         self.rect.y += self.vel_y
 
-        # Ground collision
-        if self.rect.bottom >= SCREEN_HEIGHT:
-            self.rect.bottom = SCREEN_HEIGHT
-            self.vel_y = 0
-            self.jumping = False
+        # Platform collision
+        for platform in platforms:
+            if self.rect.colliderect(platform.rect) and self.vel_y > 0:
+                self.rect.bottom = platform.rect.top
+                self.vel_y = 0
+                self.jumping = False
+
+# Platform class
+class Platform(pygame.sprite.Sprite):
+    def __init__(self, x, y, width, height):
+        super().__init__()
+        self.image = pygame.Surface((width, height))
+        self.image.fill(GREEN)
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
 
 player = Player(100, SCREEN_HEIGHT - 100)
 all_sprites = pygame.sprite.Group()
 all_sprites.add(player)
+
+platforms = pygame.sprite.Group()
+ground = Platform(0, SCREEN_HEIGHT - 40, SCREEN_WIDTH, 40)
+platforms.add(ground)
+all_sprites.add(ground)
 
 # Game loop
 running = True
@@ -67,7 +84,7 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-    all_sprites.update()
+    player.update(platforms)
     screen.fill(BLACK)
     all_sprites.draw(screen)
     # Update the display
@@ -75,5 +92,6 @@ while running:
 
 # Quit Pygame
 pygame.quit()
+
 
 
