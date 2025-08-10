@@ -79,29 +79,31 @@ ground = Platform(0, SCREEN_HEIGHT - 40, SCREEN_WIDTH, 40)
 platforms.add(ground)
 all_sprites.add(ground)
 
-# Game loop
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-    player.update(platforms)
+def main():
+    # Game loop
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+        player.update(platforms)
 
-    # Camera follows player
-    camera_x = player.rect.x - SCREEN_WIDTH // 2
-    camera_x = max(0, camera_x)  # Prevent camera from going off-screen
+        # Camera follows player
+        camera_x = player.rect.x - SCREEN_WIDTH // 2
+        camera_x = max(0, camera_x)  # Prevent camera from going off-screen
 
-    screen.fill(SKY_BLUE)
+        screen.fill(SKY_BLUE)
 
-    # Draw all sprites with camera offset
-    for sprite in all_sprites:
-        screen.blit(sprite.image, (sprite.rect.x - camera_x, sprite.rect.y))
+        # Draw all sprites with camera offset
+        for sprite in all_sprites:
+            screen.blit(sprite.image, (sprite.rect.x - camera_x, sprite.rect.y))
 
-    # Update the display
-    pygame.display.flip()
+        # Update the display
+        pygame.display.flip()
 
-# Quit Pygame
-pygame.quit()
+    # Quit Pygame
+    pygame.quit()
 
+main()
 
 
