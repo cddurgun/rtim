@@ -110,7 +110,7 @@ export class CostEstimator {
     duration: number
     prompt: string
   }): CostEstimate {
-    const { model, size, duration, prompt } = params
+    const { model, size, duration } = params
 
     // Get base cost per second
     const resolution = this.normalizeSize(size)

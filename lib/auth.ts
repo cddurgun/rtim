@@ -46,7 +46,7 @@ export const authConfig = {
     error: '/error',
   },
   callbacks: {
-    async session({ session, token }: any) {
+    async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.sub as string
 
@@ -73,7 +73,7 @@ export const authConfig = {
       }
       return session
     },
-    async jwt({ token, user }: any) {
+    async jwt({ token, user }) {
       if (user) {
         token.sub = user.id
       }

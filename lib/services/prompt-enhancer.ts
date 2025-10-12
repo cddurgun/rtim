@@ -165,7 +165,7 @@ export class PromptEnhancer {
   private static applyCinematicEnhancement(
     prompt: string,
     level: 'minimal' | 'moderate' | 'maximum',
-    analysis: any
+    analysis: ReturnType<typeof PromptEnhancer.analyzePrompt>
   ): string {
     let enhanced = prompt
     const additions: string[] = []
@@ -205,7 +205,7 @@ export class PromptEnhancer {
   /**
    * Apply technical optimizations
    */
-  private static applyTechnicalOptimization(prompt: string, analysis: any): string {
+  private static applyTechnicalOptimization(prompt: string, analysis: ReturnType<typeof PromptEnhancer.analyzePrompt>): string {
     let optimized = prompt
 
     // Add quality descriptors if missing
@@ -265,7 +265,7 @@ export class PromptEnhancer {
   /**
    * Add temporal coherence descriptors
    */
-  private static addTemporalCoherence(prompt: string, analysis: any): string {
+  private static addTemporalCoherence(prompt: string, analysis: ReturnType<typeof PromptEnhancer.analyzePrompt>): string {
     if (!analysis.hasMotion) {
       return `${prompt}, smooth motion, consistent movement`
     }
@@ -275,7 +275,7 @@ export class PromptEnhancer {
   /**
    * Calculate quality score (0-100)
    */
-  private static calculateQualityScore(enhanced: string, analysis: any): number {
+  private static calculateQualityScore(enhanced: string, analysis: ReturnType<typeof PromptEnhancer.analyzePrompt>): number {
     let score = 50 // Base score
 
     // Add points for each category covered
@@ -296,7 +296,7 @@ export class PromptEnhancer {
   /**
    * Estimate success rate (0-100)
    */
-  private static estimateSuccessRate(enhanced: string, analysis: any): number {
+  private static estimateSuccessRate(_enhanced: string, analysis: ReturnType<typeof PromptEnhancer.analyzePrompt>): number {
     let rate = 60 // Base rate
 
     // Increase based on completeness

@@ -1,5 +1,5 @@
 import OpenAI from 'openai'
-import { CINEMATIC_TERMS, STYLE_TEMPLATES } from '@/lib/constants'
+import { STYLE_TEMPLATES } from '@/lib/constants'
 import { EnhancedPrompt } from '@/lib/types'
 
 const openai = new OpenAI({
@@ -220,7 +220,7 @@ Style: ${template.settings.cinematicStyle}`
 
       if (result.flagged) {
         const issues = Object.entries(result.categories)
-          .filter(([_, flagged]) => flagged)
+          .filter(([, flagged]) => flagged)
           .map(([category]) => category)
 
         return {
