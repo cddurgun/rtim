@@ -1,0 +1,20 @@
+🔑 OpenAI API Key found: sk-proj-fDl7GxS3PzS4...
+🌐 Testing against: http://localhost:3002
+
+🚀 Starting Sora API Video Generation Test
+
+============================================================
+📡 Testing direct OpenAI Sora API call...
+Response status: 404
+Response content-type: text/html
+❌ Sora API Error: 404 Not Found
+Error details: <html>
+<head><title>404 Not Found</title></head>
+<body>
+<center><h1>404 Not Found</h1></center>
+<hr><center>nginx</center>
+</body>
+</html>
+
+
+❌ Test failed: Could not initiate video generation

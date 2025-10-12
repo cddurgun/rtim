@@ -1,0 +1,534 @@
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserTier {
+  BASIC
+  PRO
+  ENTERPRISE
+}
+
+enum VideoStatus {
+  QUEUED
+  IN_PROGRESS
+  PREPROCESSING
+  RUNNING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum VideoModel {
+  SORA_2
+  SORA_2_PRO
+}
+
+enum TransactionType {
+  PURCHASE
+  GENERATION
+  REFUND
+  BONUS
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  image         String?
+  emailVerified DateTime?
+
+  // Social Profile
+  username      String?   @unique
+  bio           String?   @db.Text
+  website       String?
+  location      String?
+  coverImage    String?
+
+  // Credits and subscription
+  credits       Int       @default(100)
+  tier          UserTier  @default(BASIC)
+
+  // Social Stats
+  followersCount  Int     @default(0)
+  followingCount  Int     @default(0)
+  totalLikes      Int     @default(0)
+
+  // Privacy
+  isPrivate       Boolean @default(false)
+
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastActiveAt  DateTime  @default(now())
+
+  // Relations
+  accounts      Account[]
+  sessions      Session[]
+  videos        Video[]
+  styleProfiles StyleProfile[]
+  prompts       Prompt[]
+  transactions  Transaction[]
+  workspaces    WorkspaceMember[]
+  videoLikes    VideoLike[]
+  videoComments VideoComment[]
+  followers     UserFollow[]     @relation("UserFollowers")
+  following     UserFollow[]     @relation("UserFollowing")
+  videoViews    VideoView[]
+  behaviorPatterns UserBehaviorPattern[]
+  generationFailures GenerationFailure[]
+
+  @@index([email])
+  @@index([tier])
+  @@index([username])
+}
+
+// NextAuth models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Video generation models
+model Video {
+  id              String      @id @default(cuid())
+  soraJobId       String?     @unique
+
+  // Content
+  originalPrompt  String      @db.Text
+  enhancedPrompt  String?     @db.Text
+  remixedFrom     String?
+
+  // Status and metadata
+  status          VideoStatus @default(QUEUED)
+  model           VideoModel  @default(SORA_2)
+  progress        Int         @default(0)
+
+  // Video specifications
+  size            String      @default("1280x720") // e.g., "1280x720", "1920x1080"
+  duration        Int         @default(8)          // seconds
+
+  // Storage URLs
+  videoUrl        String?
+  thumbnailUrl    String?
+  spritesheetUrl  String?
+  storageKey      String?
+
+  // Cost and performance
+  creditsCost     Int
+  generationTime  Int?        // milliseconds
+  performanceScore Float?     // 0-100 quality score
+
+  // User feedback
+  userRating      Int?        // 1-5 stars
+  isFavorite      Boolean     @default(false)
+  isPublic        Boolean     @default(true)
+
+  // Social Stats
+  viewsCount      Int         @default(0)
+  likesCount      Int         @default(0)
+  commentsCount   Int         @default(0)
+  sharesCount     Int         @default(0)
+
+  // Discovery
+  tags            String[]    // Array of tags
+
+  // Error handling
+  errorMessage    String?     @db.Text
+  retryCount      Int         @default(0)
+
+  // Metadata
+  metadata        Json?       // Additional metadata, settings, etc.
+
+  // Timestamps
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  completedAt     DateTime?
+
+  // Relations
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+  workspace       Workspace?  @relation(fields: [workspaceId], references: [id])
+  workspaceId     String?
+  likes           VideoLike[]
+  comments        VideoComment[]
+  views           VideoView[]
+  failures        GenerationFailure[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([workspaceId])
+  @@index([isPublic])
+  @@index([likesCount])
+  @@index([viewsCount])
+}
+
+// Style profiles for consistent generation
+model StyleProfile {
+  id          String   @id @default(cuid())
+  name        String
+  description String?  @db.Text
+
+  // Style configuration
+  settings    Json     // Stores style parameters, presets, etc.
+
+  // Usage stats
+  useCount    Int      @default(0)
+  isTemplate  Boolean  @default(false)
+  isPublic    Boolean  @default(false)
+
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+
+  @@index([userId])
+  @@index([isPublic])
+}
+
+// Prompt history and analytics
+model Prompt {
+  id              String   @id @default(cuid())
+
+  // Content
+  original        String   @db.Text
+  enhanced        String?  @db.Text
+
+  // Performance metrics
+  successRate     Float    @default(0)
+  avgCost         Float    @default(0)
+  avgQuality      Float    @default(0)
+  timesUsed       Int      @default(1)
+
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  lastUsedAt      DateTime @default(now())
+
+  // Relations
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+
+  @@index([userId])
+  @@index([successRate])
+}
+
+// Transaction history for credits
+model Transaction {
+  id              String          @id @default(cuid())
+
+  // Transaction details
+  type            TransactionType
+  amount          Int             // credits (positive for purchase/refund, negative for usage)
+  balanceAfter    Int
+
+  // Payment details (for purchases)
+  stripePaymentId String?
+  amountUSD       Float?          // actual USD amount for purchases
+
+  // Context
+  description     String?
+  videoId         String?
+  metadata        Json?
+
+  // Timestamps
+  createdAt       DateTime        @default(now())
+
+  // Relations
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+// Workspace for team collaboration
+model Workspace {
+  id          String            @id @default(cuid())
+  name        String
+  slug        String            @unique
+
+  // Resources
+  sharedCredits Int             @default(0)
+
+  // Settings
+  settings    Json?
+
+  // Timestamps
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  // Relations
+  members     WorkspaceMember[]
+  videos      Video[]
+
+  @@index([slug])
+}
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+model WorkspaceMember {
+  id          String        @id @default(cuid())
+
+  role        WorkspaceRole @default(MEMBER)
+
+  // Timestamps
+  joinedAt    DateTime      @default(now())
+
+  // Relations
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String
+
+  @@unique([userId, workspaceId])
+  @@index([userId])
+  @@index([workspaceId])
+}
+
+// Social Media Models
+
+// Video Likes
+model VideoLike {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  videoId   String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+
+  @@unique([videoId, userId])
+  @@index([videoId])
+  @@index([userId])
+}
+
+// Video Comments
+model VideoComment {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  video     Video           @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  videoId   String
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  parent    VideoComment?   @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  parentId  String?
+  replies   VideoComment[]  @relation("CommentReplies")
+
+  @@index([videoId])
+  @@index([userId])
+  @@index([parentId])
+  @@index([createdAt])
+}
+
+// User Follows
+model UserFollow {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+
+  follower    User     @relation("UserFollowers", fields: [followerId], references: [id], onDelete: Cascade)
+  followerId  String
+  following   User     @relation("UserFollowing", fields: [followingId], references: [id], onDelete: Cascade)
+  followingId String
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}
+
+// Video Views (for analytics)
+model VideoView {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  videoId   String
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId    String?
+  ipAddress String?
+
+  @@index([videoId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// Analytics and Learning Models
+
+// Prompt Performance Analytics
+model PromptAnalytics {
+  id              String   @id @default(cuid())
+
+  // Prompt info
+  promptText      String   @db.Text
+  promptHash      String   // Hash for deduplication
+  category        String?  // Categorization (landscape, portrait, action, etc.)
+
+  // Performance metrics
+  totalGenerations  Int    @default(0)
+  successfulGens    Int    @default(0)
+  failedGens        Int    @default(0)
+  avgQualityScore   Float  @default(0)
+  avgCost           Float  @default(0)
+  avgGenerationTime Int    @default(0) // milliseconds
+
+  // User engagement
+  avgUserRating     Float  @default(0)
+  totalLikes        Int    @default(0)
+  totalViews        Int    @default(0)
+
+  // Optimization insights
+  successPatterns   Json?  // What makes this prompt successful
+  failurePatterns   Json?  // Common failure reasons
+
+  // Timestamps
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  lastUsedAt        DateTime @default(now())
+
+  @@unique([promptHash])
+  @@index([category])
+  @@index([avgQualityScore])
+  @@index([totalGenerations])
+}
+
+// Generation Failure Analysis
+model GenerationFailure {
+  id              String   @id @default(cuid())
+
+  // Failure details
+  errorType       String   // e.g., "timeout", "content_filter", "api_error"
+  errorMessage    String?  @db.Text
+  prompt          String   @db.Text
+  model           VideoModel
+
+  // Context
+  retryAttempt    Int      @default(0)
+  wasRetried      Boolean  @default(false)
+  wasSuccessful   Boolean  @default(false) // After retry
+
+  // Analysis
+  detectedIssues  Json?    // Array of detected issues
+  suggestions     Json?    // Suggestions for improvement
+
+  // Relations
+  video           Video?   @relation(fields: [videoId], references: [id], onDelete: SetNull)
+  videoId         String?
+  user            User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId          String?
+
+  // Timestamps
+  createdAt       DateTime @default(now())
+
+  @@index([errorType])
+  @@index([model])
+  @@index([createdAt])
+  @@index([userId])
+}
+
+// User Behavior Patterns
+model UserBehaviorPattern {
+  id              String   @id @default(cuid())
+
+  // Pattern identification
+  patternType     String   // e.g., "preferred_style", "generation_time", "cost_sensitivity"
+  patternData     Json     // Stores the pattern details
+
+  // Confidence and relevance
+  confidence      Float    @default(0) // 0-100
+  lastValidated   DateTime @default(now())
+
+  // Relations
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+
+  // Timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@index([patternType])
+}
+
+// A/B Test Results
+model ABTest {
+  id              String   @id @default(cuid())
+
+  // Test configuration
+  testName        String
+  testType        String   // e.g., "prompt_enhancement", "model_selection"
+  variantA        Json     // Configuration for variant A
+  variantB        Json     // Configuration for variant B
+
+  // Results
+  variantAResults Json     // Metrics for A
+  variantBResults Json     // Metrics for B
+  winner          String?  // "A", "B", or null if inconclusive
+  confidence      Float    @default(0)
+
+  // Test status
+  isActive        Boolean  @default(true)
+  participantCount Int     @default(0)
+
+  // Timestamps
+  startedAt       DateTime @default(now())
+  endedAt         DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([testName])
+  @@index([isActive])
+}
