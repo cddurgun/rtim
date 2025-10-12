@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { packageId, type } = body
+    const { packageId: _packageId, type: _type } = body
 
     // TODO: Implement actual Stripe integration
     // const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)

@@ -108,7 +108,7 @@ export async function GET(req: NextRequest) {
         modelUsage,
         resolutionUsage,
       })
-    } catch (dbError) {
+    } catch {
       // Database not available - return demo data
       console.log('Database not connected, returning demo data')
 

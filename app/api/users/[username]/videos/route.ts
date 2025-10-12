@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { VideoStatus } from '@prisma/client'
+import { VideoStatus, Prisma } from '@prisma/client'
 
 export async function GET(
   req: NextRequest,
@@ -38,15 +38,11 @@ export async function GET(
     }
 
     // Build query based on viewing permissions
-    const whereClause: any = {
+    const whereClause: Prisma.VideoWhereInput = {
       userId: user.id,
       status: VideoStatus.COMPLETED,
       videoUrl: { not: null },
-    }
-
-    // If not own profile, only show public videos
-    if (!isOwnProfile) {
-      whereClause.isPublic = true
+      ...(isOwnProfile ? {} : { isPublic: true }),
     }
 
     // Fetch videos with pagination

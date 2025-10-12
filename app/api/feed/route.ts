@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 
 export async function GET(req: NextRequest) {
   try {
@@ -13,57 +14,43 @@ export async function GET(req: NextRequest) {
 
     const skip = (page - 1) * limit
 
-    // Base where clause for public completed videos
-    let whereClause: any = {
+    // Build where clause based on feed type
+    let whereClause: Prisma.VideoWhereInput = {
       isPublic: true,
       status: 'COMPLETED',
       videoUrl: { not: null },
     }
 
-    // Adjust based on feed type
+    // Add following filter if needed
     if (feedType === 'following' && session?.user) {
-      // Get users that current user is following
       const following = await prisma.userFollow.findMany({
         where: { followerId: session.user.id },
         select: { followingId: true },
       })
-
-      const followingIds = following.map(f => f.followingId)
-
-      if (followingIds.length === 0) {
-        // If not following anyone, return empty
-        return NextResponse.json({
-          success: true,
-          videos: [],
-          hasMore: false,
-          page,
-        })
+      const followingIds = following.map((f) => f.followingId)
+      if (followingIds.length > 0) {
+        whereClause.userId = { in: followingIds }
       }
-
-      whereClause.userId = { in: followingIds }
     }
 
-    // Determine sort order
-    let orderBy: any = { createdAt: 'desc' }
-
+    // Add trending filter if needed
     if (feedType === 'trending') {
-      // Trending: most engagement in last 24h
       const yesterday = new Date()
       yesterday.setDate(yesterday.getDate() - 1)
-
       whereClause.createdAt = { gte: yesterday }
-      orderBy = [
-        { likesCount: 'desc' },
-        { viewsCount: 'desc' },
-        { commentsCount: 'desc' },
-      ]
-    } else if (feedType === 'forYou') {
-      // For You: algorithmic (engagement-based)
-      orderBy = [
-        { likesCount: 'desc' },
-        { createdAt: 'desc' },
-      ]
     }
+
+    // Determine sort order based on feed type
+    const orderBy: Prisma.VideoOrderByWithRelationInput | Prisma.VideoOrderByWithRelationInput[] =
+      feedType === 'trending'
+        ? [
+            { likesCount: 'desc' },
+            { viewsCount: 'desc' },
+            { commentsCount: 'desc' },
+          ]
+        : feedType === 'forYou'
+        ? [{ likesCount: 'desc' }, { createdAt: 'desc' }]
+        : { createdAt: 'desc' }
 
     const [videos, total] = await Promise.all([
       prisma.video.findMany({
