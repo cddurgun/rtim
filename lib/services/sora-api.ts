@@ -1,9 +1,4 @@
-import OpenAI from 'openai'
-import { SoraCreateJobRequest, SoraJobResponse } from '@/lib/types'
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+import { SoraJobResponse } from '@/lib/types'
 
 export class SoraAPI {
   /**

@@ -1,8 +1,10 @@
 import { prisma } from '@/lib/prisma'
 import { SoraAPI } from './sora-api'
-import { VideoModel, VideoStatus } from '@prisma/client'
+import { VideoModel, VideoStatus, Prisma } from '@prisma/client'
 import { CREDIT_COSTS } from '@/lib/constants'
 import { InsufficientCreditsError, VideoGenerationError } from '@/lib/types'
+import fs from 'fs'
+import path from 'path'
 
 export class VideoService {
   /**
@@ -215,7 +217,7 @@ export class VideoService {
     try {
       const status = await SoraAPI.getVideoStatus(soraJobId)
 
-      const updateData: any = {
+      const updateData: Prisma.VideoUpdateInput = {
         status: this.mapSoraStatus(status.status),
         progress: status.progress || 0,
       }
@@ -225,9 +227,6 @@ export class VideoService {
 
         // Download and store video locally
         try {
-          const fs = require('fs')
-          const path = require('path')
-
           const videoBuffer = await SoraAPI.downloadVideo(soraJobId, 'video')
           const videoPath = path.join(process.cwd(), 'public', 'videos', `${videoId}.mp4`)
           fs.writeFileSync(videoPath, videoBuffer)
@@ -341,7 +340,7 @@ export class VideoService {
       ? this.mapSoraStatusToEnum(params.status)
       : params.status
 
-    const updateData: any = {
+    const updateData: Prisma.VideoUpdateManyMutationInput = {
       status: mappedStatus,
       progress: progress ?? undefined,
     }

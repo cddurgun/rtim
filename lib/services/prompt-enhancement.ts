@@ -260,7 +260,7 @@ Style: ${template.settings.cinematicStyle}`
   /**
    * Get prompt suggestions based on user's history
    */
-  static async getPromptSuggestions(userId: string): Promise<string[]> {
+  static async getPromptSuggestions(_userId: string): Promise<string[]> {
     // This would analyze user's successful prompts and suggest similar ones
     // For now, return popular templates
     return [

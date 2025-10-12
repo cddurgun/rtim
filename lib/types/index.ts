@@ -1,4 +1,4 @@
-import { Video, VideoStatus, VideoModel, UserTier, TransactionType } from '@prisma/client'
+import { Video, VideoStatus, VideoModel, TransactionType } from '@prisma/client'
 
 // Video generation types
 export interface VideoGenerationRequest {
@@ -58,7 +58,7 @@ export interface CreditTransaction {
   amount: number
   description: string
   videoId?: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export interface CreditEstimate {
