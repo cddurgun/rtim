@@ -125,7 +125,7 @@ Style: ${template.settings.cinematicStyle}`
     const improvements: string[] = []
 
     // Check if prompt already has shot type
-    if (!this.hasShot Type(originalPrompt)) {
+    if (!this.hasShotType(originalPrompt)) {
       enhanced = `Medium shot, ${enhanced}`
       improvements.push('Added shot type')
     }
