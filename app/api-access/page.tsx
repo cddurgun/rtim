@@ -21,23 +21,12 @@ export default function ApiAccessPage() {
   const [hasKey, setHasKey] = useState(false)
   const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
-  // Redirect if not authenticated
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-      </div>
-    )
-  }
-
-  if (status === 'unauthenticated') {
-    router.push('/signin')
-    return null
-  }
-
+  // Fetch API key when authenticated
   useEffect(() => {
-    fetchApiKey()
-  }, [])
+    if (status === 'authenticated') {
+      fetchApiKey()
+    }
+  }, [status])
 
   const fetchApiKey = async () => {
     setIsLoading(true)
@@ -113,6 +102,20 @@ export default function ApiAccessPage() {
     } catch (error) {
       setSaveMessage({ type: 'error', text: 'Failed to remove API key' })
     }
+  }
+
+  // Redirect if not authenticated
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    )
+  }
+
+  if (status === 'unauthenticated') {
+    router.push('/signin')
+    return null
   }
 
   return (

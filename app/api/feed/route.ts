@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
     const skip = (page - 1) * limit
 
     // Build where clause based on feed type
-    let whereClause: Prisma.VideoWhereInput = {
+    const whereClause: Prisma.VideoWhereInput = {
       isPublic: true,
       status: 'COMPLETED',
       videoUrl: { not: null },

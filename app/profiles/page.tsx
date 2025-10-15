@@ -52,24 +52,12 @@ export default function ProfilesPage() {
     isPublic: true,
   })
 
-  // Redirect if not authenticated
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-      </div>
-    )
-  }
-
-  if (status === 'unauthenticated') {
-    router.push('/signin')
-    return null
-  }
-
   // Fetch profiles on mount
   useEffect(() => {
-    fetchProfiles()
-  }, [activeTab])
+    if (status === 'authenticated') {
+      fetchProfiles()
+    }
+  }, [activeTab, status])
 
   const fetchProfiles = async () => {
     setIsLoading(true)
@@ -167,6 +155,20 @@ export default function ProfilesPage() {
     p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     p.description.toLowerCase().includes(searchQuery.toLowerCase())
   )
+
+  // Redirect if not authenticated
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    )
+  }
+
+  if (status === 'unauthenticated') {
+    router.push('/signin')
+    return null
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">

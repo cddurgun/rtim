@@ -15,7 +15,7 @@ interface CreditPackage {
   price: number
   bonus: number
   popular?: boolean
-  icon: any
+  icon: React.ComponentType<{ className?: string }>
 }
 
 interface Transaction {
@@ -48,23 +48,12 @@ export default function BillingPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isPurchasing, setIsPurchasing] = useState<string | null>(null)
 
-  // Redirect if not authenticated
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-      </div>
-    )
-  }
-
-  if (status === 'unauthenticated') {
-    router.push('/signin')
-    return null
-  }
-
+  // Fetch transactions when authenticated
   useEffect(() => {
-    fetchTransactions()
-  }, [])
+    if (status === 'authenticated') {
+      fetchTransactions()
+    }
+  }, [status])
 
   const fetchTransactions = async () => {
     setIsLoading(true)
@@ -103,6 +92,20 @@ export default function BillingPage() {
     } finally {
       setIsPurchasing(null)
     }
+  }
+
+  // Redirect if not authenticated
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    )
+  }
+
+  if (status === 'unauthenticated') {
+    router.push('/signin')
+    return null
   }
 
   return (

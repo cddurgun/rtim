@@ -16,9 +16,36 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from '@/lib/utils/toast'
 import { debounce } from 'lodash'
 
+interface Video {
+  id: string
+  prompt: string
+  videoUrl: string
+  thumbnailUrl?: string
+  duration: number
+  model: string
+  size: string
+  tags: string[]
+  createdAt: string
+  user: { id: string; name: string | null; username: string | null; image: string | null }
+  likesCount: number
+  commentsCount: number
+  viewsCount: number
+  isLiked: boolean
+}
+
+interface User {
+  id: string
+  username: string | null
+  name: string | null
+  image: string | null
+  bio: string | null
+  videosCount: number
+  followersCount: number
+}
+
 interface SearchResults {
-  videos: any[]
-  users: any[]
+  videos: Video[]
+  users: User[]
   tags: Array<{ tag: string; count: number }>
 }
 
@@ -37,7 +64,7 @@ export default function ExplorePage() {
   })
   const [isLoading, setIsLoading] = useState(false)
   const [recentSearches, setRecentSearches] = useState<string[]>([])
-  const [trending, setTrending] = useState<any[]>([])
+  const [trending, setTrending] = useState<Video[]>([])
 
   // Debounce search query
   const debouncedSearch = useCallback(
@@ -241,7 +268,7 @@ export default function ExplorePage() {
 
         {/* Results Tabs */}
         {debouncedQuery.length >= 2 && (
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="mb-6">
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'all' | 'videos' | 'users' | 'tags')} className="mb-6">
             <TabsList className="grid w-full max-w-md grid-cols-4">
               <TabsTrigger value="all" className="gap-2">
                 All

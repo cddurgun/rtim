@@ -52,23 +52,11 @@ export default function VideosPage() {
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
 
-  // Redirect if not authenticated
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-      </div>
-    )
-  }
-
-  if (status === 'unauthenticated') {
-    router.push('/signin')
-    return null
-  }
-
   useEffect(() => {
-    fetchVideos()
-  }, [filterStatus, sortBy, page])
+    if (status === 'authenticated') {
+      fetchVideos()
+    }
+  }, [filterStatus, sortBy, page, status])
 
   const fetchVideos = async () => {
     setIsLoading(true)
@@ -133,7 +121,7 @@ export default function VideosPage() {
   )
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, { variant: any; label: string }> = {
+    const variants: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; label: string }> = {
       COMPLETED: { variant: 'default', label: 'Completed' },
       PROCESSING: { variant: 'secondary', label: 'Processing' },
       FAILED: { variant: 'destructive', label: 'Failed' },
@@ -142,7 +130,7 @@ export default function VideosPage() {
 
     const config = variants[status] || variants.PENDING
     return (
-      <Badge variant={config.variant as any}>
+      <Badge variant={config.variant}>
         {config.label}
       </Badge>
     )
@@ -155,6 +143,20 @@ export default function VideosPage() {
       day: 'numeric',
       year: 'numeric',
     })
+  }
+
+  // Redirect if not authenticated
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    )
+  }
+
+  if (status === 'unauthenticated') {
+    router.push('/signin')
+    return null
   }
 
   return (

@@ -29,7 +29,16 @@ export default function GeneratePage() {
   const [generationStatus, setGenerationStatus] = useState<string>('')
   const [generatedVideo, setGeneratedVideo] = useState<{ url: string; jobId: string } | null>(null)
   const [jobId, setJobId] = useState<string | null>(null)
-  const [recentVideos, setRecentVideos] = useState<any[]>([])
+  const [recentVideos, setRecentVideos] = useState<Array<{
+    id: string
+    prompt: string
+    status: string
+    videoUrl?: string
+    thumbnailUrl?: string
+    duration: number
+    resolution: string
+    cost: number
+  }>>([])
   const [loadingRecent, setLoadingRecent] = useState(false)
 
   // Load profile from localStorage if available
@@ -104,6 +113,42 @@ export default function GeneratePage() {
     return () => clearTimeout(timeoutId)
   }, [prompt, model, resolution, duration])
 
+  // Poll for video status
+  useEffect(() => {
+    if (!jobId || !isGenerating) return
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await fetch(`/api/videos/status/${jobId}`)
+        const data = await response.json()
+
+        if (data.success && data.data) {
+          setGenerationStatus(data.data.status || 'processing')
+
+          if (data.data.status === 'completed' && data.data.download_url) {
+            setGeneratedVideo({
+              url: data.data.download_url,
+              jobId: jobId,
+            })
+            setIsGenerating(false)
+            setGenerationStatus('Video generation complete!')
+            clearInterval(pollInterval)
+            // Refresh recent videos
+            fetchRecentVideos()
+          } else if (data.data.status === 'failed') {
+            setError('Video generation failed. Please try again.')
+            setIsGenerating(false)
+            clearInterval(pollInterval)
+          }
+        }
+      } catch (err) {
+        console.error('Error polling video status:', err)
+      }
+    }, 3000) // Poll every 3 seconds
+
+    return () => clearInterval(pollInterval)
+  }, [jobId, isGenerating])
+
   // Redirect if not authenticated
   if (status === 'loading') {
     return (
@@ -165,42 +210,6 @@ export default function GeneratePage() {
 
     return Math.ceil(baseCost * durationNum * modelMultiplier * resolutionMultiplier)
   }
-
-  // Poll for video status
-  useEffect(() => {
-    if (!jobId || !isGenerating) return
-
-    const pollInterval = setInterval(async () => {
-      try {
-        const response = await fetch(`/api/videos/status/${jobId}`)
-        const data = await response.json()
-
-        if (data.success && data.data) {
-          setGenerationStatus(data.data.status || 'processing')
-
-          if (data.data.status === 'completed' && data.data.download_url) {
-            setGeneratedVideo({
-              url: data.data.download_url,
-              jobId: jobId,
-            })
-            setIsGenerating(false)
-            setGenerationStatus('Video generation complete!')
-            clearInterval(pollInterval)
-            // Refresh recent videos
-            fetchRecentVideos()
-          } else if (data.data.status === 'failed') {
-            setError('Video generation failed. Please try again.')
-            setIsGenerating(false)
-            clearInterval(pollInterval)
-          }
-        }
-      } catch (err) {
-        console.error('Error polling video status:', err)
-      }
-    }, 3000) // Poll every 3 seconds
-
-    return () => clearInterval(pollInterval)
-  }, [jobId, isGenerating])
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
