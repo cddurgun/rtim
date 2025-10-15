@@ -1,7 +1,7 @@
 'use client'
 
 import { signIn } from 'next-auth/react'
-import { useState, useEffect } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Sparkles, Loader2 } from 'lucide-react'
 
-export default function SignInPage() {
+function SignInContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
@@ -206,5 +206,20 @@ export default function SignInPage() {
         ← Back to home
       </Link>
     </div>
+  )
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
+          <p className="text-gray-600 dark:text-gray-400">Loading sign in...</p>
+        </div>
+      </div>
+    }>
+      <SignInContent />
+    </Suspense>
   )
 }

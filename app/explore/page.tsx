@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { Suspense, useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Input } from '@/components/ui/input'
@@ -50,7 +50,7 @@ interface SearchResults {
   tags: Array<{ tag: string; count: number }>
 }
 
-export default function ExplorePage() {
+function ExploreContent() {
   const searchParams = useSearchParams()
   const initialQuery = searchParams.get('q') || ''
 
@@ -460,5 +460,20 @@ export default function ExplorePage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function ExplorePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading explore page...</p>
+        </div>
+      </div>
+    }>
+      <ExploreContent />
+    </Suspense>
   )
 }

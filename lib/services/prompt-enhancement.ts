@@ -2,9 +2,17 @@ import OpenAI from 'openai'
 import { STYLE_TEMPLATES } from '@/lib/constants'
 import { EnhancedPrompt } from '@/lib/types'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+// Lazy initialization to avoid build-time errors
+let openaiInstance: OpenAI | null = null
+
+function getOpenAI(): OpenAI {
+  if (!openaiInstance) {
+    openaiInstance = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY || '',
+    })
+  }
+  return openaiInstance
+}
 
 export class PromptEnhancementService {
   /**
@@ -24,7 +32,7 @@ export class PromptEnhancementService {
       const systemPrompt = this.buildSystemPrompt(cinematicLevel, styleTemplate)
 
       // Use GPT-4 to enhance the prompt
-      const completion = await openai.chat.completions.create({
+      const completion = await getOpenAI().chat.completions.create({
         model: 'gpt-4',
         messages: [
           {
@@ -212,7 +220,7 @@ Style: ${template.settings.cinematicStyle}`
     issues: string[]
   }> {
     try {
-      const moderation = await openai.moderations.create({
+      const moderation = await getOpenAI().moderations.create({
         input: prompt,
       })
 
