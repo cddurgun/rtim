@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 // GET /api/workspaces/[id] - Get workspace details with members
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth()
@@ -14,7 +14,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const workspaceId = params.id
+    const { id: workspaceId } = await params
 
     // Fetch workspace with members
     const workspace = await prisma.workspace.findUnique({
@@ -68,7 +68,7 @@ export async function GET(
 // DELETE /api/workspaces/[id] - Delete workspace (owner only)
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth()
@@ -77,7 +77,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const workspaceId = params.id
+    const { id: workspaceId } = await params
 
     // Check if user is the owner
     const workspace = await prisma.workspace.findUnique({
@@ -114,7 +114,7 @@ export async function DELETE(
 // PATCH /api/workspaces/[id] - Update workspace details (owner/admin only)
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth()
@@ -123,7 +123,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const workspaceId = params.id
+    const { id: workspaceId } = await params
     const { name, description, sharedCredits } = await req.json()
 
     // Check if user is owner or admin

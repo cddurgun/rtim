@@ -10,7 +10,7 @@ export async function GET(
   { params }: { params: Promise<{ jobId: string }> }
 ) {
   try {
-    await requireAuth()
+    const user = await requireAuth()
 
     const { jobId } = await params
 
@@ -21,8 +21,21 @@ export async function GET(
       )
     }
 
+    // Get user's API key
+    const userData = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { openaiApiKey: true },
+    })
+
+    if (!userData?.openaiApiKey) {
+      return NextResponse.json(
+        { error: 'OpenAI API key not configured' },
+        { status: 400 }
+      )
+    }
+
     // Get job status from Sora API
-    const jobStatus = await SoraAPI.getVideoStatus(jobId)
+    const jobStatus = await SoraAPI.getVideoStatus(jobId, userData.openaiApiKey)
 
     // Get video from database to get the video ID
     const video = await prisma.video.findFirst({

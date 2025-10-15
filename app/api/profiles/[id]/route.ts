@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 // DELETE /api/profiles/[id] - Delete a style profile
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth()
@@ -13,7 +13,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const profileId = params.id
+    const { id: profileId } = await params
 
     // Check if profile exists and belongs to user
     const profile = await prisma.styleProfile.findUnique({
@@ -42,7 +42,7 @@ export async function DELETE(
 // PATCH /api/profiles/[id] - Update a style profile
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth()
@@ -50,7 +50,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const profileId = params.id
+    const { id: profileId } = await params
     const body = await req.json()
 
     // Check if profile exists and belongs to user
@@ -71,10 +71,12 @@ export async function PATCH(
       data: {
         name: body.name,
         description: body.description,
-        promptTemplate: body.prompt,
-        model: body.model,
-        defaultResolution: body.resolution,
-        defaultDuration: body.duration,
+        settings: {
+          promptTemplate: body.prompt,
+          model: body.model,
+          defaultResolution: body.resolution,
+          defaultDuration: body.duration,
+        },
         isPublic: body.isPublic,
       },
     })

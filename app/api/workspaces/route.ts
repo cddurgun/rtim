@@ -129,7 +129,7 @@ export async function POST(req: NextRequest) {
           slug,
           sharedCredits: sharedCredits || 0,
           ownerId: session.user.id,
-          settings: description ? { description } : null,
+          settings: description ? { description } : {},
         },
         include: {
           owner: {

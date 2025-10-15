@@ -21,6 +21,16 @@ export default function ProfileSettingsPage() {
     image: '',
   })
 
+  useEffect(() => {
+    if (session?.user) {
+      setProfile({
+        name: session.user.name || '',
+        email: session.user.email || '',
+        image: session.user.image || '',
+      })
+    }
+  }, [session])
+
   // Redirect if not authenticated
   if (status === 'loading') {
     return (
@@ -34,16 +44,6 @@ export default function ProfileSettingsPage() {
     router.push('/signin')
     return null
   }
-
-  useEffect(() => {
-    if (session?.user) {
-      setProfile({
-        name: session.user.name || '',
-        email: session.user.email || '',
-        image: session.user.image || '',
-      })
-    }
-  }, [session])
 
   const handleSave = async () => {
     setIsSaving(true)

@@ -75,7 +75,7 @@ export default function VideoDetailPage() {
 
   const [video, setVideo] = useState<VideoDetail | null>(null)
   const [comments, setComments] = useState<Comment[]>([])
-  const [relatedVideos, setRelatedVideos] = useState<any[]>([])
+  const [relatedVideos, setRelatedVideos] = useState<VideoDetail[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isLiked, setIsLiked] = useState(false)
   const [likesCount, setLikesCount] = useState(0)
@@ -132,7 +132,7 @@ export default function VideoDetailPage() {
 
       if (response.ok) {
         const data = await response.json()
-        setRelatedVideos((data.videos || []).filter((v: any) => v.id !== videoId))
+        setRelatedVideos((data.videos || []).filter((v: VideoDetail) => v.id !== videoId))
       }
     } catch (error) {
       console.error('Failed to fetch related videos:', error)
@@ -495,7 +495,7 @@ export default function VideoDetailPage() {
                     <div className="relative aspect-video rounded-lg overflow-hidden mb-2">
                       <video
                         src={relatedVideo.videoUrl}
-                        poster={relatedVideo.thumbnailUrl}
+                        poster={relatedVideo.thumbnailUrl || undefined}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                       />
                       <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
@@ -503,7 +503,7 @@ export default function VideoDetailPage() {
                       </div>
                     </div>
                     <p className="text-sm font-medium line-clamp-2 group-hover:text-blue-600">
-                      {relatedVideo.originalPrompt || relatedVideo.prompt}
+                      {relatedVideo.originalPrompt}
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
                       {relatedVideo.user.name || 'Anonymous'}

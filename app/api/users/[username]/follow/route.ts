@@ -73,8 +73,7 @@ export async function POST(
     await notifyUserFollow(
       userId,
       session.user.name || 'Someone',
-      session.user.id,
-      username
+      session.user.id
     )
 
     return NextResponse.json({

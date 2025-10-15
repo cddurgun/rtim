@@ -4,10 +4,11 @@ import { auth } from '@/lib/auth'
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { tag: string } }
+  { params }: { params: Promise<{ tag: string }> }
 ) {
   try {
-    const tag = decodeURIComponent(params.tag).toLowerCase()
+    const { tag: tagParam } = await params
+    const tag = decodeURIComponent(tagParam).toLowerCase()
     const { searchParams } = new URL(req.url)
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '12')

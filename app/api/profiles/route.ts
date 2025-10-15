@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
+interface StyleSettings {
+  promptTemplate?: string
+  model?: string
+  defaultResolution?: string
+  defaultDuration?: number
+}
+
 // GET /api/profiles - Fetch profiles (discover or my profiles)
 export async function GET(req: NextRequest) {
   try {
@@ -47,20 +54,23 @@ export async function GET(req: NextRequest) {
     }
 
     // Transform the response to match frontend expectations
-    const transformedProfiles = profiles.map((profile) => ({
-      id: profile.id,
-      name: profile.name,
-      description: profile.description || '',
-      prompt: (profile.settings as any)?.promptTemplate || '',
-      model: (profile.settings as any)?.model || 'SORA_2',
-      resolution: (profile.settings as any)?.defaultResolution || '1280x720',
-      duration: (profile.settings as any)?.defaultDuration || 10,
-      isPublic: profile.isPublic,
-      userId: profile.userId,
-      likes: profile.useCount || 0,
-      createdAt: profile.createdAt.toISOString(),
-      user: profile.user,
-    }))
+    const transformedProfiles = profiles.map((profile) => {
+      const settings = profile.settings as StyleSettings
+      return {
+        id: profile.id,
+        name: profile.name,
+        description: profile.description || '',
+        prompt: settings?.promptTemplate || '',
+        model: settings?.model || 'SORA_2',
+        resolution: settings?.defaultResolution || '1280x720',
+        duration: settings?.defaultDuration || 10,
+        isPublic: profile.isPublic,
+        userId: profile.userId,
+        likes: profile.useCount || 0,
+        createdAt: profile.createdAt.toISOString(),
+        user: profile.user,
+      }
+    })
 
     return NextResponse.json({ profiles: transformedProfiles })
   } catch (error) {
@@ -111,14 +121,15 @@ export async function POST(req: NextRequest) {
     })
 
     // Transform response to match frontend expectations
+    const profileSettings = profile.settings as StyleSettings
     const transformedProfile = {
       id: profile.id,
       name: profile.name,
       description: profile.description || '',
-      prompt: (profile.settings as any)?.promptTemplate || '',
-      model: (profile.settings as any)?.model || 'SORA_2',
-      resolution: (profile.settings as any)?.defaultResolution || '1280x720',
-      duration: (profile.settings as any)?.defaultDuration || 10,
+      prompt: profileSettings?.promptTemplate || '',
+      model: profileSettings?.model || 'SORA_2',
+      resolution: profileSettings?.defaultResolution || '1280x720',
+      duration: profileSettings?.defaultDuration || 10,
       isPublic: profile.isPublic,
       userId: profile.userId,
       likes: profile.useCount || 0,

@@ -20,7 +20,7 @@ export class SoraAPI {
       formData.append('seconds', params.seconds.toString())
 
       if (params.inputReference) {
-        const blob = new Blob([params.inputReference.buffer])
+        const blob = new Blob([new Uint8Array(params.inputReference)])
         formData.append('input_reference', blob, 'image.jpg')
       }
 

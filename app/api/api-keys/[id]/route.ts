@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 // DELETE /api/api-keys/[id] - Delete an API key
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth()
@@ -13,7 +13,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const keyId = params.id
+    const { id: keyId } = await params
 
     // Check if API key exists and belongs to user
     const apiKey = await prisma.apiKey.findUnique({

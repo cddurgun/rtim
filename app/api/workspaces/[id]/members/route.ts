@@ -6,7 +6,7 @@ import { WorkspaceRole } from '@prisma/client'
 // GET /api/workspaces/[id]/members - Get all members of a workspace
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth()
@@ -15,7 +15,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const workspaceId = params.id
+    const { id: workspaceId } = await params
 
     // Check if user is a member
     const isMember = await prisma.workspaceMember.findFirst({
@@ -61,7 +61,7 @@ export async function GET(
 // POST /api/workspaces/[id]/members - Invite a new member to workspace
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth()
@@ -70,7 +70,7 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const workspaceId = params.id
+    const { id: workspaceId } = await params
     const { email, role = 'MEMBER' } = await req.json()
 
     if (!email) {

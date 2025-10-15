@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 // DELETE /api/workspaces/[id]/members/[memberId] - Remove a member from workspace
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string; memberId: string } }
+  { params }: { params: Promise<{ id: string; memberId: string }> }
 ) {
   try {
     const session = await auth()
@@ -14,8 +14,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const workspaceId = params.id
-    const memberIdToRemove = params.memberId
+    const { id: workspaceId, memberId: memberIdToRemove } = await params
 
     // Get the member to be removed
     const memberToRemove = await prisma.workspaceMember.findUnique({
@@ -100,7 +99,7 @@ export async function DELETE(
 // PATCH /api/workspaces/[id]/members/[memberId] - Update member role (owner/admin only)
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string; memberId: string } }
+  { params }: { params: Promise<{ id: string; memberId: string }> }
 ) {
   try {
     const session = await auth()
@@ -109,8 +108,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const workspaceId = params.id
-    const memberIdToUpdate = params.memberId
+    const { id: workspaceId, memberId: memberIdToUpdate } = await params
     const { role } = await req.json()
 
     if (!role || !['OWNER', 'ADMIN', 'MEMBER', 'VIEWER'].includes(role)) {

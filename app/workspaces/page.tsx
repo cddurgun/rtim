@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
-import { Loader2, Plus, Users, Settings, Trash2, Crown, UserPlus, MoreVertical, Video, Coins, Shield } from 'lucide-react'
+import { Loader2, Plus, Users, Settings, Trash2, Video } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
@@ -52,24 +52,6 @@ export default function WorkspacesPage() {
     sharedCredits: 0,
   })
 
-  // Redirect if not authenticated
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-      </div>
-    )
-  }
-
-  if (status === 'unauthenticated') {
-    router.push('/signin')
-    return null
-  }
-
-  useEffect(() => {
-    fetchWorkspaces()
-  }, [])
-
   const fetchWorkspaces = async () => {
     setIsLoading(true)
     try {
@@ -83,6 +65,26 @@ export default function WorkspacesPage() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      fetchWorkspaces()
+    }
+  }, [status])
+
+  // Redirect if not authenticated
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    )
+  }
+
+  if (status === 'unauthenticated') {
+    router.push('/signin')
+    return null
   }
 
   const handleCreateWorkspace = async () => {
@@ -133,14 +135,14 @@ export default function WorkspacesPage() {
   }
 
   const getRoleBadge = (role: string) => {
-    const roles: Record<string, { variant: any; label: string }> = {
+    const roles: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; label: string }> = {
       OWNER: { variant: 'default', label: 'Owner' },
       ADMIN: { variant: 'secondary', label: 'Admin' },
       MEMBER: { variant: 'outline', label: 'Member' },
       VIEWER: { variant: 'outline', label: 'Viewer' },
     }
     const config = roles[role] || roles.MEMBER
-    return <Badge variant={config.variant as any}>{config.label}</Badge>
+    return <Badge variant={config.variant}>{config.label}</Badge>
   }
 
   return (

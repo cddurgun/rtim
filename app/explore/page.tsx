@@ -17,9 +17,10 @@ import { debounce } from 'lodash'
 
 interface Video {
   id: string
-  prompt: string
+  originalPrompt: string
+  prompt?: string
   videoUrl: string
-  thumbnailUrl?: string
+  thumbnailUrl: string | null
   duration: number
   model: string
   size: string
@@ -28,6 +29,7 @@ interface Video {
   user: { id: string; name: string | null; username: string | null; image: string | null }
   likesCount: number
   commentsCount: number
+  sharesCount: number
   viewsCount: number
   isLiked: boolean
 }

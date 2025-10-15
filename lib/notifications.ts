@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { NotificationType } from '@prisma/client'
+import { NotificationType, Prisma } from '@prisma/client'
 
 interface CreateNotificationParams {
   userId: string // Recipient of the notification
@@ -30,7 +30,7 @@ export async function createNotification(params: CreateNotificationParams) {
         videoId: params.videoId,
         commentId: params.commentId,
         actionUrl: params.actionUrl,
-        metadata: params.metadata,
+        metadata: params.metadata as Prisma.InputJsonValue | undefined,
       },
     })
 

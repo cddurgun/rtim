@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
+import { Prisma } from '@prisma/client'
 
 export async function GET(req: NextRequest) {
   try {
@@ -17,7 +18,7 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50')
     const unreadOnly = searchParams.get('unreadOnly') === 'true'
 
-    const where: any = { userId: session.user.id }
+    const where: Prisma.NotificationWhereInput = { userId: session.user.id }
     if (unreadOnly) {
       where.isRead = false
     }

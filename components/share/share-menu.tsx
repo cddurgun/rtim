@@ -114,7 +114,7 @@ export function ShareMenu({ videoId, title, description, className }: ShareMenuP
           <h3 className="font-semibold text-sm">Share this video</h3>
 
           {/* Native Share (if available) */}
-          {typeof window !== 'undefined' && navigator.share && (
+          {typeof window !== 'undefined' && 'share' in navigator && (
             <Button
               variant="outline"
               className="w-full justify-start"

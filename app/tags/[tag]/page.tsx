@@ -227,7 +227,7 @@ export default function TagPage() {
             {/* End of Feed */}
             {!hasMore && videos.length > 0 && (
               <div className="text-center py-12 text-gray-500">
-                <p>You've seen all videos with #{tag}</p>
+                <p>You&apos;ve seen all videos with #{tag}</p>
               </div>
             )}
           </>

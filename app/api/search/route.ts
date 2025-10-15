@@ -2,6 +2,43 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
 
+interface SearchResults {
+  videos: Array<{
+    id: string
+    originalPrompt: string
+    enhancedPrompt: string | null
+    videoUrl: string | null
+    thumbnailUrl: string | null
+    duration: number
+    viewsCount: number
+    likesCount: number
+    commentsCount: number
+    sharesCount: number
+    isLiked: boolean
+    tags: string[]
+    createdAt: string
+    user: {
+      id: string
+      name: string | null
+      username: string | null
+      image: string | null
+    }
+  }>
+  users: Array<{
+    id: string
+    name: string | null
+    username: string | null
+    image: string | null
+    bio: string | null
+    followersCount: number
+    followingCount: number
+    videosCount: number
+    isFollowing: boolean
+    isOwnProfile: boolean
+  }>
+  tags: Array<{ tag: string; count: number }>
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
@@ -21,7 +58,7 @@ export async function GET(req: NextRequest) {
     }
 
     const session = await auth()
-    const results: any = {
+    const results: SearchResults = {
       videos: [],
       users: [],
       tags: [],

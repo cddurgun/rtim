@@ -98,7 +98,7 @@ export class VideoService {
     // Check if user has enough credits
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { credits: true },
+      select: { credits: true, openaiApiKey: true },
     })
 
     if (!user || user.credits < creditsCost) {
@@ -179,7 +179,7 @@ export class VideoService {
           throw new Error('Original video not found or has no Sora job ID')
         }
 
-        soraJob = await SoraAPI.remixVideo(originalVideo.soraJobId, enhancedPrompt || prompt)
+        soraJob = await SoraAPI.remixVideo(originalVideo.soraJobId, enhancedPrompt || prompt, user.openaiApiKey || '')
       } else {
         soraJob = await SoraAPI.createVideo({
           prompt: enhancedPrompt || prompt,
@@ -187,6 +187,7 @@ export class VideoService {
           size,
           seconds: duration,
           inputReference,
+          apiKey: user.openaiApiKey || '',
         })
       }
 
@@ -243,7 +244,22 @@ export class VideoService {
    */
   static async updateVideoStatus(videoId: string, soraJobId: string) {
     try {
-      const status = await SoraAPI.getVideoStatus(soraJobId)
+      // Get user's API key
+      const video = await prisma.video.findUnique({
+        where: { id: videoId },
+        select: { userId: true },
+      })
+
+      if (!video) {
+        throw new Error('Video not found')
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { id: video.userId },
+        select: { openaiApiKey: true },
+      })
+
+      const status = await SoraAPI.getVideoStatus(soraJobId, user?.openaiApiKey || '')
 
       const updateData: Prisma.VideoUpdateInput = {
         status: this.mapSoraStatus(status.status),
@@ -255,7 +271,7 @@ export class VideoService {
 
         // Download and store video locally
         try {
-          const videoBuffer = await SoraAPI.downloadVideo(soraJobId, 'video')
+          const videoBuffer = await SoraAPI.downloadVideo(soraJobId, user?.openaiApiKey || '', 'video')
           const videoPath = path.join(process.cwd(), 'public', 'videos', `${videoId}.mp4`)
           fs.writeFileSync(videoPath, videoBuffer)
 
@@ -263,12 +279,13 @@ export class VideoService {
 
           // Try to download thumbnail (optional, may fail)
           try {
-            const thumbnailBuffer = await SoraAPI.downloadVideo(soraJobId, 'thumbnail')
+            const thumbnailBuffer = await SoraAPI.downloadVideo(soraJobId, user?.openaiApiKey || '', 'thumbnail')
             const thumbPath = path.join(process.cwd(), 'public', 'videos', `${videoId}-thumb.webp`)
             fs.writeFileSync(thumbPath, thumbnailBuffer)
             updateData.thumbnailUrl = `/videos/${videoId}-thumb.webp`
           } catch (thumbError) {
-            console.log('Thumbnail download failed (optional):', thumbError.message)
+            const error = thumbError as Error
+            console.log('Thumbnail download failed (optional):', error.message)
           }
         } catch (downloadError) {
           console.error('Failed to download and save video:', downloadError)
@@ -449,7 +466,13 @@ export class VideoService {
     // Delete from Sora if it exists
     if (video.soraJobId) {
       try {
-        await SoraAPI.deleteVideo(video.soraJobId)
+        // Get user's API key
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { openaiApiKey: true },
+        })
+
+        await SoraAPI.deleteVideo(video.soraJobId, user?.openaiApiKey || '')
       } catch (error) {
         console.error('Error deleting from Sora:', error)
         // Continue with database deletion even if Sora deletion fails

@@ -4,7 +4,7 @@ import { auth } from '@/lib/auth'
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth()
@@ -16,7 +16,7 @@ export async function PUT(
       )
     }
 
-    const notificationId = params.id
+    const { id: notificationId } = await params
 
     // Verify notification belongs to user
     const notification = await prisma.notification.findFirst({

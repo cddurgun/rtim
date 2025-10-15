@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/services/auth-utils'
 import { VideoService } from '@/lib/services/video-service'
-import { VideoStatus } from '@prisma/client'
+import { VideoStatus, Video } from '@prisma/client'
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Map database fields to frontend expected fields
-    const mappedVideos = result.data.map((video: any) => ({
+    const mappedVideos = result.data.map((video: Video) => ({
       id: video.id,
       prompt: video.originalPrompt,
       enhancedPrompt: video.enhancedPrompt,

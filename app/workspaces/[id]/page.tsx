@@ -12,13 +12,36 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 
+interface WorkspaceMember {
+  id: string
+  role: string
+  user: {
+    name: string | null
+    email: string
+    image: string | null
+  }
+}
+
+interface Workspace {
+  id: string
+  name: string
+  description: string | null
+  ownerId: string
+  sharedCredits: number
+  _count?: {
+    members: number
+    videos: number
+  }
+  members?: WorkspaceMember[]
+}
+
 export default function WorkspaceDetailPage() {
   const params = useParams()
   const router = useRouter()
   const { data: session } = useSession()
   const workspaceId = params.id as string
 
-  const [workspace, setWorkspace] = useState<any>(null)
+  const [workspace, setWorkspace] = useState<Workspace | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [inviteEmail, setInviteEmail] = useState('')
   const [isInviting, setIsInviting] = useState(false)
@@ -184,7 +207,7 @@ export default function WorkspaceDetailPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {workspace.members?.map((member: any) => (
+              {workspace.members?.map((member: WorkspaceMember) => (
                 <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex items-center space-x-4">
                     <Avatar>

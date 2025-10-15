@@ -49,7 +49,7 @@ export const authConfig = {
         // Check database for real users
         try {
           const user = await prisma.user.findUnique({
-            where: { email: credentials.email },
+            where: { email: credentials.email as string },
             select: {
               id: true,
               email: true,
@@ -65,7 +65,7 @@ export const authConfig = {
 
           // Verify password
           const isPasswordValid = await bcrypt.compare(
-            credentials.password,
+            credentials.password as string,
             user.passwordHash
           )
 

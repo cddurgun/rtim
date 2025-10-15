@@ -7,13 +7,42 @@ import { Loader2, ArrowLeft, Plus } from 'lucide-react'
 import { VideoCard } from '@/components/feed/video-card'
 import { VideoCardSkeleton } from '@/components/feed/video-card-skeleton'
 
+interface Workspace {
+  id: string
+  name: string
+  description: string | null
+}
+
+interface Video {
+  id: string
+  originalPrompt: string
+  videoUrl: string
+  thumbnailUrl: string | null
+  duration: number
+  model: string
+  size: string
+  tags: string[]
+  createdAt: string
+  user: {
+    id: string
+    name: string | null
+    username: string | null
+    image: string | null
+  }
+  likesCount: number
+  commentsCount: number
+  sharesCount: number
+  viewsCount: number
+  isLiked: boolean
+}
+
 export default function WorkspaceVideosPage() {
   const params = useParams()
   const router = useRouter()
   const workspaceId = params.id as string
 
-  const [workspace, setWorkspace] = useState<any>(null)
-  const [videos, setVideos] = useState<any[]>([])
+  const [workspace, setWorkspace] = useState<Workspace | null>(null)
+  const [videos, setVideos] = useState<Video[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {

@@ -5,10 +5,10 @@ import { prisma } from '@/lib/prisma'
 // POST /api/videos/[id]/view - Track video view
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const videoId = params.id
+    const { id: videoId } = await params
     const session = await auth()
 
     // Get client IP address for deduplication

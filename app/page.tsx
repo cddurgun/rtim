@@ -106,7 +106,7 @@ export default function Home() {
             </h1>
 
             <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-400 mb-10 max-w-3xl mx-auto leading-relaxed">
-              The world's first AI-powered video platform with intelligent prompt enhancement,
+              The world&apos;s first AI-powered video platform with intelligent prompt enhancement,
               style consistency, and enterprise-grade quality control
             </p>
 
@@ -450,7 +450,7 @@ export default function Home() {
               <CardContent className="p-8">
                 <div className="mb-6">
                   <h3 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">
-                    What's Included
+                    What&apos;s Included
                   </h3>
                   <div className="flex items-baseline gap-2 mb-4">
                     <span className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -538,7 +538,7 @@ export default function Home() {
 
           <div className="mt-12 text-center">
             <p className="text-gray-600 dark:text-gray-400 mb-4">
-              <strong>BYOK Model:</strong> You're billed directly by OpenAI for Sora usage. RTIM platform is free - just bring your own OpenAI API key!
+              <strong>BYOK Model:</strong> You&apos;re billed directly by OpenAI for Sora usage. RTIM platform is free - just bring your own OpenAI API key!
             </p>
           </div>
         </div>

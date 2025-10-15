@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 // GET /api/workspaces/[id]/videos - Get all videos in a workspace
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth()
@@ -14,7 +14,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const workspaceId = params.id
+    const { id: workspaceId } = await params
 
     // Check if user is a member of this workspace
     const member = await prisma.workspaceMember.findFirst({
@@ -104,7 +104,7 @@ export async function GET(
 // POST /api/workspaces/[id]/videos - Create a video in this workspace
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth()
@@ -113,7 +113,7 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const workspaceId = params.id
+    const { id: workspaceId } = await params
 
     // Check if user is a member with proper permissions
     const member = await prisma.workspaceMember.findFirst({

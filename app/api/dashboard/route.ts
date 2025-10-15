@@ -39,8 +39,8 @@ export async function GET(req: NextRequest) {
           creditsCost: true,
           createdAt: true,
           completedAt: true,
-          generationTimeMs: true,
-          views: true,
+          generationTime: true,
+          viewsCount: true,
           model: true,
           size: true,
           duration: true,
@@ -53,14 +53,14 @@ export async function GET(req: NextRequest) {
       const processingVideos = videos.filter(v => v.status === VideoStatus.IN_PROGRESS || v.status === VideoStatus.QUEUED).length
       const failedVideos = videos.filter(v => v.status === VideoStatus.FAILED).length
       const totalCreditsSpent = videos.reduce((sum, v) => sum + v.creditsCost, 0)
-      const totalViews = videos.reduce((sum, v) => sum + (v.views || 0), 0)
+      const totalViews = videos.reduce((sum, v) => sum + (v.viewsCount || 0), 0)
       const averageCost = totalVideos > 0 ? totalCreditsSpent / totalVideos : 0
       const successRate = totalVideos > 0 ? (completedVideos / totalVideos) * 100 : 0
       const totalDuration = videos.reduce((sum, v) => sum + v.duration, 0)
 
-      const completedWithTime = videos.filter(v => v.generationTimeMs && v.generationTimeMs > 0)
+      const completedWithTime = videos.filter(v => v.generationTime && v.generationTime > 0)
       const avgGenerationTime = completedWithTime.length > 0
-        ? completedWithTime.reduce((sum, v) => sum + (v.generationTimeMs || 0), 0) / completedWithTime.length / 1000
+        ? completedWithTime.reduce((sum, v) => sum + (v.generationTime || 0), 0) / completedWithTime.length / 1000
         : 0
 
       const modelUsage = {
