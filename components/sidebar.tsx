@@ -21,8 +21,6 @@ import {
   User,
   Bell,
   ChevronRight,
-  Coins,
-  Search,
   Compass
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -32,7 +30,7 @@ import { NotificationCenter } from '@/components/notifications/notification-cent
 interface NavItem {
   name: string
   href: string
-  icon: any
+  icon: React.ComponentType<{ className?: string }>
   badge?: string
 }
 

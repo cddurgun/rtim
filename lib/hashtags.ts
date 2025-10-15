@@ -149,7 +149,7 @@ export function removeHashtags(text: string): string {
  * Gets trending hashtags from the database
  * This would typically query the database for most used tags
  */
-export async function getTrendingHashtags(limit: number = 20): Promise<Array<{ tag: string; count: number }>> {
+export async function getTrendingHashtags(_limit: number = 20): Promise<Array<{ tag: string; count: number }>> {
   // This is a placeholder - implement with actual database query
   // For now, return empty array
   return []

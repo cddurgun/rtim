@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
-import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, Settings } from 'lucide-react'
+import { Play, Pause, Volume2, VolumeX, Maximize, Minimize } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { cn } from '@/lib/utils'
@@ -199,7 +199,7 @@ export function EnhancedVideoPlayer({
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [volume])
+  }, [volume, togglePlay, toggleMute, toggleFullscreen, handleVolumeChange])
 
   return (
     <div

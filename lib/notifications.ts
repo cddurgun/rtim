@@ -10,7 +10,7 @@ interface CreateNotificationParams {
   videoId?: string
   commentId?: string
   actionUrl?: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export async function createNotification(params: CreateNotificationParams) {
