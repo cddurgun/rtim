@@ -1,17 +1,19 @@
 import { VideoModel } from '@prisma/client'
 
 // Credit pricing configuration
+// 1 second = 1 credit = $0.30 (flat rate, no multipliers)
 export const CREDIT_COSTS = {
-  BASE_COST_PER_SECOND: 1, // 1 credit per second
+  BASE_COST_PER_SECOND: 1, // 1 credit per second = $0.30 USD
+  COST_PER_CREDIT_USD: 0.30, // $0.30 per credit
   MODEL_MULTIPLIERS: {
-    SORA_2: 1.0,      // Standard pricing
-    SORA_2_PRO: 2.5,  // 2.5x cost for Pro model
+    SORA_2: 1.0,      // No multiplier - flat rate
+    SORA_2_PRO: 1.0,  // No multiplier - flat rate
   },
   RESOLUTION_MULTIPLIERS: {
-    '480x480': 0.5,
-    '640x480': 0.7,
-    '1280x720': 1.0,  // Base (720p)
-    '1920x1080': 1.5, // 1080p
+    '480x480': 1.0,
+    '640x480': 1.0,
+    '1280x720': 1.0,
+    '1920x1080': 1.0,
   },
 }
 
@@ -35,13 +37,14 @@ export const TIER_LIMITS = {
 }
 
 // Video generation limits
+// All videos are 10 seconds only
 export const VIDEO_LIMITS = {
-  MIN_DURATION: 4,
-  MAX_DURATION: 20,
+  MIN_DURATION: 10,
+  MAX_DURATION: 10,
   MAX_PROMPT_LENGTH: 5000,
   SUPPORTED_RESOLUTIONS: ['480x480', '640x480', '1280x720', '1920x1080'],
   SUPPORTED_MODELS: ['sora-2', 'sora-2-pro'] as const,
-  SUPPORTED_DURATIONS: [4, 8, 12, 16, 20],
+  SUPPORTED_DURATIONS: [10], // Only 10 seconds supported
 }
 
 // Rate limiting
@@ -214,8 +217,8 @@ export const API_ROUTES = {
 
 // Default values
 export const DEFAULTS = {
-  STARTER_CREDITS: 100,
+  STARTER_CREDITS: 0, // No starter credits - users must purchase
   VIDEO_MODEL: VideoModel.SORA_2,
   VIDEO_RESOLUTION: '1280x720',
-  VIDEO_DURATION: 8,
+  VIDEO_DURATION: 10, // All videos are 10 seconds
 }

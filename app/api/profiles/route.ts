@@ -27,9 +27,6 @@ export async function GET(req: NextRequest) {
               image: true,
             },
           },
-          _count: {
-            select: { likes: true },
-          },
         },
       })
     } else {
@@ -45,18 +42,24 @@ export async function GET(req: NextRequest) {
               image: true,
             },
           },
-          _count: {
-            select: { likes: true },
-          },
         },
       })
     }
 
-    // Transform the response to include likes count
+    // Transform the response to match frontend expectations
     const transformedProfiles = profiles.map((profile) => ({
-      ...profile,
-      likes: profile._count?.likes || 0,
-      _count: undefined,
+      id: profile.id,
+      name: profile.name,
+      description: profile.description || '',
+      prompt: (profile.settings as any)?.promptTemplate || '',
+      model: (profile.settings as any)?.model || 'SORA_2',
+      resolution: (profile.settings as any)?.defaultResolution || '1280x720',
+      duration: (profile.settings as any)?.defaultDuration || 10,
+      isPublic: profile.isPublic,
+      userId: profile.userId,
+      likes: profile.useCount || 0,
+      createdAt: profile.createdAt.toISOString(),
+      user: profile.user,
     }))
 
     return NextResponse.json({ profiles: transformedProfiles })
@@ -81,14 +84,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Name and prompt are required' }, { status: 400 })
     }
 
+    // Store configuration in settings JSON field
+    const settings = {
+      promptTemplate: prompt,
+      model: model || 'SORA_2',
+      defaultResolution: resolution || '1280x720',
+      defaultDuration: duration || 10,
+    }
+
     const profile = await prisma.styleProfile.create({
       data: {
         name,
         description: description || '',
-        promptTemplate: prompt,
-        model: model || 'SORA_2',
-        defaultResolution: resolution || '1280x720',
-        defaultDuration: duration || 8,
+        settings,
         isPublic: isPublic ?? true,
         userId: session.user.id,
       },
@@ -102,7 +110,23 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    return NextResponse.json(profile, { status: 201 })
+    // Transform response to match frontend expectations
+    const transformedProfile = {
+      id: profile.id,
+      name: profile.name,
+      description: profile.description || '',
+      prompt: (profile.settings as any)?.promptTemplate || '',
+      model: (profile.settings as any)?.model || 'SORA_2',
+      resolution: (profile.settings as any)?.defaultResolution || '1280x720',
+      duration: (profile.settings as any)?.defaultDuration || 10,
+      isPublic: profile.isPublic,
+      userId: profile.userId,
+      likes: profile.useCount || 0,
+      createdAt: profile.createdAt.toISOString(),
+      user: profile.user,
+    }
+
+    return NextResponse.json(transformedProfile, { status: 201 })
   } catch (error) {
     console.error('Failed to create profile:', error)
     return NextResponse.json({ error: 'Failed to create profile' }, { status: 500 })

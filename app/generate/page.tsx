@@ -19,7 +19,7 @@ export default function GeneratePage() {
   const [enhancedPrompt, setEnhancedPrompt] = useState('')
   const [model, setModel] = useState('SORA_2')
   const [resolution, setResolution] = useState('1280x720')
-  const [duration, setDuration] = useState('8')
+  const [duration, setDuration] = useState('10')
   const [isEnhancing, setIsEnhancing] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [estimatedCost, setEstimatedCost] = useState(80)
@@ -41,7 +41,7 @@ export default function GeneratePage() {
         setPrompt(profile.prompt || '')
         setModel(profile.model || 'SORA_2')
         setResolution(profile.resolution || '1280x720')
-        setDuration(profile.duration?.toString() || '8')
+        setDuration(profile.duration?.toString() || '10')
         setLoadedProfile(profile.name || '')
         localStorage.removeItem('selectedProfile')
       } catch (error) {
@@ -348,8 +348,7 @@ export default function GeneratePage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="SORA_2">Sora-2 (Standard)</SelectItem>
-                      <SelectItem value="SORA_2_PRO">Sora-2 Pro (2.5x cost, higher quality)</SelectItem>
+                      <SelectItem value="SORA_2">Sora-2</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -377,13 +376,11 @@ export default function GeneratePage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="4">4 seconds</SelectItem>
-                      <SelectItem value="8">8 seconds</SelectItem>
-                      <SelectItem value="12">12 seconds</SelectItem>
+                      <SelectItem value="10">10 seconds</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-gray-500">
-                    Sora API currently supports 4, 8, and 12 second videos
+                    All videos are 10 seconds (1 credit per second)
                   </p>
                 </div>
 
@@ -433,8 +430,8 @@ export default function GeneratePage() {
                   <span className="font-semibold">{parseInt(duration) * 1} credits</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Model multiplier</span>
-                  <span className="font-semibold">{model === 'SORA_2_PRO' ? '2.5x' : '1.0x'}</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Model</span>
+                  <span className="font-semibold">Sora-2</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600 dark:text-gray-400">Resolution</span>
@@ -480,11 +477,11 @@ export default function GeneratePage() {
                     </div>
                     <div className="flex items-start space-x-2">
                       <span className="text-blue-600">•</span>
-                      <p>Start with shorter durations to test your prompts</p>
+                      <p>All videos are 10 seconds - optimize your prompts for this duration</p>
                     </div>
                     <div className="flex items-start space-x-2">
                       <span className="text-blue-600">•</span>
-                      <p>Sora-2 Pro provides higher quality and more details</p>
+                      <p>Include specific details about motion and action in your prompt</p>
                     </div>
                   </>
                 )}

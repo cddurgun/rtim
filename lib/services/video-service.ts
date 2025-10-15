@@ -3,6 +3,8 @@ import { SoraAPI } from './sora-api'
 import { VideoModel, VideoStatus, Prisma } from '@prisma/client'
 import { CREDIT_COSTS } from '@/lib/constants'
 import { InsufficientCreditsError, VideoGenerationError } from '@/lib/types'
+import { extractAndGenerateTags } from '@/lib/hashtags'
+import { notifyCreditLow } from '@/lib/notifications'
 import fs from 'fs'
 import path from 'path'
 
@@ -41,6 +43,9 @@ export class VideoService {
     workspaceId?: string
     remixedFrom?: string
   }) {
+    // Extract and generate tags from prompt
+    const tags = extractAndGenerateTags(params.originalPrompt)
+
     const video = await prisma.video.create({
       data: {
         userId: params.userId,
@@ -54,6 +59,7 @@ export class VideoService {
         status: VideoStatus.QUEUED,
         workspaceId: params.workspaceId,
         remixedFrom: params.remixedFrom,
+        tags,
       },
     })
 
@@ -102,10 +108,13 @@ export class VideoService {
     // Deduct credits and create video record in a transaction
     const video = await prisma.$transaction(async (tx) => {
       // Deduct credits
-      await tx.user.update({
+      const updatedUser = await tx.user.update({
         where: { id: userId },
         data: { credits: { decrement: creditsCost } },
+        select: { credits: true },
       })
+
+      const remainingCredits = updatedUser.credits
 
       // Create transaction record
       await tx.transaction.create({
@@ -113,13 +122,16 @@ export class VideoService {
           userId,
           type: 'GENERATION',
           amount: -creditsCost,
-          balanceAfter: user.credits - creditsCost,
+          balanceAfter: remainingCredits,
           description: `Video generation - ${model} ${size} ${duration}s`,
         },
       })
 
+      // Extract and generate tags from prompt
+      const tags = extractAndGenerateTags(prompt)
+
       // Create video record
-      return await tx.video.create({
+      const createdVideo = await tx.video.create({
         data: {
           userId,
           originalPrompt: prompt,
@@ -131,8 +143,24 @@ export class VideoService {
           status: VideoStatus.QUEUED,
           workspaceId,
           remixedFrom: remixVideoId,
+          tags,
         },
       })
+
+      // Check for low credits after this transaction
+      // Send notification if credits fall below threshold (50)
+      if (remainingCredits < 50 && remainingCredits >= 0) {
+        // Use setTimeout to not block the transaction
+        setTimeout(async () => {
+          try {
+            await notifyCreditLow(userId, remainingCredits)
+          } catch (error) {
+            console.error('Failed to send low credit notification:', error)
+          }
+        }, 0)
+      }
+
+      return createdVideo
     })
 
     // Submit to Sora API

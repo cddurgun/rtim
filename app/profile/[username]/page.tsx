@@ -134,7 +134,7 @@ export default function ProfilePage() {
     const method = isFollowing ? 'DELETE' : 'POST'
 
     try {
-      const response = await fetch(`/api/users/${profile.id}/follow`, { method })
+      const response = await fetch(`/api/users/${username}/follow`, { method })
 
       if (response.ok) {
         setIsFollowing(!isFollowing)
@@ -142,9 +142,13 @@ export default function ProfilePage() {
           ...prev,
           followersCount: isFollowing ? prev.followersCount - 1 : prev.followersCount + 1
         } : null)
+      } else {
+        const data = await response.json()
+        alert(data.error || 'Failed to follow/unfollow user')
       }
     } catch (error) {
       console.error('Failed to follow/unfollow:', error)
+      alert('Failed to follow/unfollow user')
     } finally {
       setIsFollowLoading(false)
     }

@@ -129,7 +129,7 @@ export default function Home() {
                 <>
                   <Link href="/signup">
                     <Button size="lg" className="text-lg px-10 py-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg shadow-indigo-500/30">
-                      Start Creating Free
+                      Get Started with Your API Key
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                   </Link>
@@ -146,15 +146,15 @@ export default function Home() {
               <div className="flex items-center justify-center gap-6 text-sm text-gray-600 dark:text-gray-400">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-green-600" />
-                  <span>No credit card required</span>
+                  <span>Bring your own API key</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-green-600" />
-                  <span>100 free credits</span>
+                  <span>No platform fees</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-green-600" />
-                  <span>Cancel anytime</span>
+                  <span>Full billing control</span>
                 </div>
               </div>
             )}
@@ -393,93 +393,99 @@ export default function Home() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {/* Free Tier */}
-            <Card className="border-2 border-gray-200 dark:border-gray-800">
+            {/* BYOK Tier */}
+            <Card className="border-2 border-indigo-500 dark:border-indigo-600 relative shadow-xl md:col-span-3 lg:col-span-1">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                <Badge className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-0 px-4 py-1">
+                  Recommended
+                </Badge>
+              </div>
               <CardContent className="p-8">
                 <div className="mb-6">
                   <h3 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">
-                    Starter
+                    Bring Your Own Key
                   </h3>
                   <div className="flex items-baseline gap-2 mb-4">
-                    <span className="text-5xl font-bold text-gray-900 dark:text-white">Free</span>
+                    <span className="text-5xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                      Free
+                    </span>
+                    <span className="text-gray-600 dark:text-gray-400">platform</span>
                   </div>
                   <p className="text-gray-600 dark:text-gray-400">
-                    Perfect for trying out RTIM
+                    Use your own OpenAI API key
                   </p>
                 </div>
                 <ul className="space-y-3 mb-8">
                   <li className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700 dark:text-gray-300">100 free credits</span>
+                    <CheckCircle2 className="h-5 w-5 text-indigo-600 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700 dark:text-gray-300">Your own OpenAI API key</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700 dark:text-gray-300">Access to Sora-2</span>
+                    <CheckCircle2 className="h-5 w-5 text-indigo-600 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700 dark:text-gray-300">No platform fees</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700 dark:text-gray-300">Basic prompt enhancement</span>
+                    <CheckCircle2 className="h-5 w-5 text-indigo-600 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700 dark:text-gray-300">Direct OpenAI billing</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700 dark:text-gray-300">720p resolution</span>
+                    <CheckCircle2 className="h-5 w-5 text-indigo-600 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700 dark:text-gray-300">Full control over costs</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-indigo-600 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700 dark:text-gray-300">All RTIM features</span>
                   </li>
                 </ul>
                 <Link href="/signup">
-                  <Button className="w-full" variant="outline">
+                  <Button className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
                     Get Started
                   </Button>
                 </Link>
               </CardContent>
             </Card>
 
-            {/* Pay As You Go */}
-            <Card className="border-2 border-indigo-500 dark:border-indigo-600 relative shadow-xl">
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                <Badge className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-0 px-4 py-1">
-                  Most Popular
-                </Badge>
-              </div>
+            {/* What's Included */}
+            <Card className="border-2 border-gray-200 dark:border-gray-800 md:col-span-3 lg:col-span-1">
               <CardContent className="p-8">
                 <div className="mb-6">
                   <h3 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">
-                    Pay As You Go
+                    What's Included
                   </h3>
                   <div className="flex items-baseline gap-2 mb-4">
-                    <span className="text-5xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                      $10
+                    <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                      All Features
                     </span>
-                    <span className="text-gray-600 dark:text-gray-400">/ 1000 credits</span>
                   </div>
                   <p className="text-gray-600 dark:text-gray-400">
-                    For individual creators
+                    Full access to RTIM platform
                   </p>
                 </div>
                 <ul className="space-y-3 mb-8">
                   <li className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-indigo-600 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700 dark:text-gray-300">All Starter features</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-indigo-600 mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                     <span className="text-gray-700 dark:text-gray-300">Sora-2 & Sora-2 Pro</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-indigo-600 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700 dark:text-gray-300">Advanced prompt AI</span>
+                    <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700 dark:text-gray-300">AI prompt enhancement</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-indigo-600 mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700 dark:text-gray-300">Style profiles</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                     <span className="text-gray-700 dark:text-gray-300">Up to 1080p resolution</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-indigo-600 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700 dark:text-gray-300">Style profiles</span>
+                    <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700 dark:text-gray-300">Workspaces</span>
                   </li>
                 </ul>
-                <Link href="/signup">
-                  <Button className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700">
-                    Get Started
+                <Link href="/api-access">
+                  <Button className="w-full" variant="outline">
+                    Learn More
                   </Button>
                 </Link>
               </CardContent>
@@ -532,7 +538,7 @@ export default function Home() {
 
           <div className="mt-12 text-center">
             <p className="text-gray-600 dark:text-gray-400 mb-4">
-              <strong>Credit Costs:</strong> Sora-2: 1 credit/sec · Sora-2 Pro: 1.5 credits/sec · Resolution multipliers apply
+              <strong>BYOK Model:</strong> You're billed directly by OpenAI for Sora usage. RTIM platform is free - just bring your own OpenAI API key!
             </p>
           </div>
         </div>
@@ -670,7 +676,7 @@ export default function Home() {
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link href="/signup">
                   <Button size="lg" variant="secondary" className="text-lg px-10 py-6 bg-white text-indigo-600 hover:bg-gray-100 shadow-xl">
-                    Start Creating Free
+                    Get Started with Your API Key
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
@@ -681,7 +687,7 @@ export default function Home() {
                 </Link>
               </div>
               <p className="mt-6 text-indigo-100">
-                No credit card required • Start with 100 free credits • Cancel anytime
+                Bring your own OpenAI API key • No platform fees • Full billing control
               </p>
             </div>
           </div>

@@ -86,14 +86,22 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Generate unique slug from name
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now()
+
     // Create workspace and deduct credits in a transaction
     const workspace = await prisma.$transaction(async (tx) => {
+      let balanceAfter = 0
+
       // Deduct credits if allocating to workspace
       if (sharedCredits > 0) {
-        await tx.user.update({
+        const updatedUser = await tx.user.update({
           where: { id: session.user.id },
           data: { credits: { decrement: sharedCredits } },
+          select: { credits: true },
         })
+
+        balanceAfter = updatedUser.credits
 
         // Create transaction record
         await tx.transaction.create({
@@ -101,19 +109,56 @@ export async function POST(req: NextRequest) {
             userId: session.user.id,
             type: 'WORKSPACE_ALLOCATION',
             amount: -sharedCredits,
+            balanceAfter,
             description: `Allocated credits to workspace: ${name}`,
           },
         })
+      } else {
+        // Get current balance if no credits allocated
+        const currentUser = await tx.user.findUnique({
+          where: { id: session.user.id },
+          select: { credits: true },
+        })
+        balanceAfter = currentUser?.credits || 0
       }
 
       // Create workspace
-      return await tx.workspace.create({
+      const newWorkspace = await tx.workspace.create({
         data: {
           name,
-          description: description || null,
+          slug,
           sharedCredits: sharedCredits || 0,
           ownerId: session.user.id,
+          settings: description ? { description } : null,
         },
+        include: {
+          owner: {
+            select: {
+              name: true,
+              image: true,
+            },
+          },
+          _count: {
+            select: {
+              members: true,
+              videos: true,
+            },
+          },
+        },
+      })
+
+      // Create owner as WorkspaceMember with OWNER role
+      await tx.workspaceMember.create({
+        data: {
+          userId: session.user.id,
+          workspaceId: newWorkspace.id,
+          role: 'OWNER',
+        },
+      })
+
+      // Fetch complete workspace with members
+      const completeWorkspace = await tx.workspace.findUnique({
+        where: { id: newWorkspace.id },
         include: {
           owner: {
             select: {
@@ -140,6 +185,8 @@ export async function POST(req: NextRequest) {
           },
         },
       })
+
+      return completeWorkspace
     })
 
     return NextResponse.json(workspace, { status: 201 })

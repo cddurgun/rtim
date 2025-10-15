@@ -37,6 +37,7 @@ export default function ProfilesPage() {
   const [myProfiles, setMyProfiles] = useState<StyleProfile[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState<'discover' | 'my-profiles'>('discover')
+  const [showCreateForm, setShowCreateForm] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -47,7 +48,7 @@ export default function ProfilesPage() {
     prompt: '',
     model: 'SORA_2',
     resolution: '1280x720',
-    duration: 8,
+    duration: 10,
     isPublic: true,
   })
 
@@ -111,9 +112,10 @@ export default function ProfilesPage() {
           prompt: '',
           model: 'SORA_2',
           resolution: '1280x720',
-          duration: 8,
+          duration: 10,
           isPublic: true,
         })
+        setShowCreateForm(false)
         alert('Profile created successfully!')
       } else {
         throw new Error('Failed to create profile')
@@ -240,15 +242,15 @@ export default function ProfilesPage() {
             />
           </div>
           {activeTab === 'my-profiles' && (
-            <Button onClick={() => setIsCreating(!isCreating)}>
+            <Button onClick={() => setShowCreateForm(!showCreateForm)}>
               <Plus className="mr-2 h-4 w-4" />
-              {isCreating ? 'Cancel' : 'Create Profile'}
+              {showCreateForm ? 'Cancel' : 'Create Profile'}
             </Button>
           )}
         </div>
 
         {/* Create Profile Form */}
-        {isCreating && activeTab === 'my-profiles' && (
+        {showCreateForm && activeTab === 'my-profiles' && (
           <Card className="mb-6">
             <CardHeader>
               <CardTitle>Create New Style Profile</CardTitle>
@@ -296,7 +298,6 @@ export default function ProfilesPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="SORA_2">Sora-2</SelectItem>
-                      <SelectItem value="SORA_2_PRO">Sora-2 Pro</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -325,11 +326,7 @@ export default function ProfilesPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="4">4 seconds</SelectItem>
-                      <SelectItem value="8">8 seconds</SelectItem>
-                      <SelectItem value="12">12 seconds</SelectItem>
-                      <SelectItem value="16">16 seconds</SelectItem>
-                      <SelectItem value="20">20 seconds</SelectItem>
+                      <SelectItem value="10">10 seconds</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -401,7 +398,7 @@ export default function ProfilesPage() {
                     <p className="line-clamp-3">{profile.prompt}</p>
                   </div>
                   <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                    <span>{profile.model === 'SORA_2_PRO' ? 'Pro' : 'Standard'}</span>
+                    <span>Sora-2</span>
                     <span>•</span>
                     <span>{profile.resolution}</span>
                     <span>•</span>

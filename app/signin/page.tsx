@@ -1,8 +1,8 @@
 'use client'
 
 import { signIn } from 'next-auth/react'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,10 +12,19 @@ import { Sparkles, Loader2 } from 'lucide-react'
 
 export default function SignInPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
+
+  useEffect(() => {
+    // Check if user just registered
+    if (searchParams.get('registered') === 'true') {
+      setSuccessMessage('Account created successfully! Please sign in with your credentials.')
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -90,6 +99,12 @@ export default function SignInPage() {
             {error && (
               <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 p-3 rounded-md">
                 {error}
+              </div>
+            )}
+
+            {successMessage && (
+              <div className="text-sm text-green-600 bg-green-50 dark:bg-green-900/20 p-3 rounded-md">
+                {successMessage}
               </div>
             )}
 

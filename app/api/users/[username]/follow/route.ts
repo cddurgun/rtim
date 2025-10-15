@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { notifyUserFollow } from '@/lib/notifications'
 
 export async function POST(
   req: NextRequest,
@@ -67,6 +68,14 @@ export async function POST(
         data: { followingCount: { increment: 1 } },
       }),
     ])
+
+    // Send follow notification
+    await notifyUserFollow(
+      userId,
+      session.user.name || 'Someone',
+      session.user.id,
+      username
+    )
 
     return NextResponse.json({
       success: true,

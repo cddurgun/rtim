@@ -7,28 +7,19 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
-import { Loader2, Key, Plus, Copy, Trash2, Eye, EyeOff, RefreshCw, Code, Book, Zap } from 'lucide-react'
+import { Loader2, Key, Eye, EyeOff, ExternalLink, CheckCircle2, AlertCircle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-
-interface ApiKey {
-  id: string
-  name: string
-  key: string
-  lastUsed: string | null
-  createdAt: string
-  expiresAt: string | null
-  requestCount: number
-}
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 export default function ApiAccessPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [apiKeys, setApiKeys] = useState<ApiKey[]>([])
+  const [apiKey, setApiKey] = useState('')
   const [isLoading, setIsLoading] = useState(true)
-  const [isCreating, setIsCreating] = useState(false)
-  const [showCreateForm, setShowCreateForm] = useState(false)
-  const [newKeyName, setNewKeyName] = useState('')
-  const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set())
+  const [isSaving, setIsSaving] = useState(false)
+  const [showKey, setShowKey] = useState(false)
+  const [hasKey, setHasKey] = useState(false)
+  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
   // Redirect if not authenticated
   if (status === 'loading') {
@@ -45,111 +36,105 @@ export default function ApiAccessPage() {
   }
 
   useEffect(() => {
-    fetchApiKeys()
+    fetchApiKey()
   }, [])
 
-  const fetchApiKeys = async () => {
+  const fetchApiKey = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch('/api/api-keys')
+      const response = await fetch('/api/user/openai-key')
       if (response.ok) {
         const data = await response.json()
-        setApiKeys(data.apiKeys || [])
+        setHasKey(data.hasKey)
+        if (data.hasKey) {
+          // Show masked version
+          setApiKey('sk-••••••••••••••••••••••••••••••••••••••••')
+        }
       }
     } catch (error) {
-      console.error('Failed to fetch API keys:', error)
+      console.error('Failed to fetch API key:', error)
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleCreateApiKey = async () => {
-    if (!newKeyName) {
-      alert('Please enter a key name')
+  const handleSaveApiKey = async () => {
+    if (!apiKey || apiKey.startsWith('sk-••')) {
+      setSaveMessage({ type: 'error', text: 'Please enter a valid OpenAI API key' })
       return
     }
 
-    setIsCreating(true)
+    if (!apiKey.startsWith('sk-')) {
+      setSaveMessage({ type: 'error', text: 'OpenAI API keys should start with "sk-"' })
+      return
+    }
+
+    setIsSaving(true)
+    setSaveMessage(null)
+
     try {
-      const response = await fetch('/api/api-keys', {
+      const response = await fetch('/api/user/openai-key', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newKeyName }),
+        body: JSON.stringify({ apiKey }),
       })
 
       if (response.ok) {
-        const apiKey = await response.json()
-        setApiKeys([apiKey, ...apiKeys])
-        setNewKeyName('')
-        setShowCreateForm(false)
-        alert('API key created! Make sure to copy it now - you won\'t be able to see it again.')
+        setHasKey(true)
+        setSaveMessage({ type: 'success', text: 'OpenAI API key saved successfully!' })
+        setApiKey('sk-••••••••••••••••••••••••••••••••••••••••')
+        setShowKey(false)
       } else {
-        alert('Failed to create API key')
+        const data = await response.json()
+        setSaveMessage({ type: 'error', text: data.error || 'Failed to save API key' })
       }
     } catch (error) {
-      alert('Failed to create API key')
+      setSaveMessage({ type: 'error', text: 'Failed to save API key. Please try again.' })
     } finally {
-      setIsCreating(false)
+      setIsSaving(false)
     }
   }
 
-  const handleDeleteApiKey = async (keyId: string) => {
-    if (!confirm('Are you sure you want to delete this API key? This action cannot be undone.')) return
+  const handleDeleteApiKey = async () => {
+    if (!confirm('Are you sure you want to remove your OpenAI API key? You won\'t be able to generate videos without it.')) return
 
     try {
-      const response = await fetch(`/api/api-keys/${keyId}`, {
+      const response = await fetch('/api/user/openai-key', {
         method: 'DELETE',
       })
 
       if (response.ok) {
-        setApiKeys(apiKeys.filter(k => k.id !== keyId))
+        setHasKey(false)
+        setApiKey('')
+        setSaveMessage({ type: 'success', text: 'API key removed successfully' })
       } else {
-        alert('Failed to delete API key')
+        setSaveMessage({ type: 'error', text: 'Failed to remove API key' })
       }
     } catch (error) {
-      alert('Failed to delete API key')
+      setSaveMessage({ type: 'error', text: 'Failed to remove API key' })
     }
-  }
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-    alert('API key copied to clipboard!')
-  }
-
-  const toggleKeyVisibility = (keyId: string) => {
-    const newVisible = new Set(visibleKeys)
-    if (newVisible.has(keyId)) {
-      newVisible.delete(keyId)
-    } else {
-      newVisible.add(keyId)
-    }
-    setVisibleKeys(newVisible)
-  }
-
-  const maskKey = (key: string) => {
-    return key.substring(0, 8) + '••••••••••••••••' + key.substring(key.length - 4)
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-4xl font-bold mb-2">API Access</h1>
-              <p className="text-gray-600 dark:text-gray-400">
-                Manage API keys for programmatic access to RTIM
-              </p>
-            </div>
-            <Button onClick={() => setShowCreateForm(!showCreateForm)} size="lg">
-              <Plus className="mr-2 h-5 w-5" />
-              {showCreateForm ? 'Cancel' : 'Create API Key'}
-            </Button>
-          </div>
+          <h1 className="text-4xl font-bold mb-2">OpenAI API Key Settings</h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Bring your own OpenAI API key to generate videos with RTIM
+          </p>
         </div>
 
-        {/* Quick Start Guide */}
+        {/* Alert Banner */}
+        <Alert className="mb-8 border-blue-200 bg-blue-50 dark:bg-blue-950/20 dark:border-blue-900">
+          <AlertCircle className="h-4 w-4 text-blue-600" />
+          <AlertDescription className="text-blue-900 dark:text-blue-100">
+            <strong>BYOK Model:</strong> RTIM uses a Bring Your Own Key (BYOK) model. You need to provide your own OpenAI API key to use Sora video generation. Your API key is encrypted and stored securely.
+          </AlertDescription>
+        </Alert>
+
+        {/* Quick Info Cards */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           <Card>
             <CardContent className="pt-6">
@@ -157,10 +142,10 @@ export default function ApiAccessPage() {
                 <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
                   <Key className="h-6 w-6 text-blue-600" />
                 </div>
-                <h3 className="font-semibold">Generate API Key</h3>
+                <h3 className="font-semibold">Your API Key</h3>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Create a new API key to authenticate your requests
+                Use your own OpenAI API key for full control and billing transparency
               </p>
             </CardContent>
           </Card>
@@ -169,12 +154,12 @@ export default function ApiAccessPage() {
             <CardContent className="pt-6">
               <div className="flex items-center space-x-3 mb-3">
                 <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                  <Code className="h-6 w-6 text-green-600" />
+                  <CheckCircle2 className="h-6 w-6 text-green-600" />
                 </div>
-                <h3 className="font-semibold">Make API Calls</h3>
+                <h3 className="font-semibold">Secure Storage</h3>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Use your API key in the Authorization header
+                Your API key is encrypted and never shared with third parties
               </p>
             </CardContent>
           </Card>
@@ -183,183 +168,163 @@ export default function ApiAccessPage() {
             <CardContent className="pt-6">
               <div className="flex items-center space-x-3 mb-3">
                 <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                  <Book className="h-6 w-6 text-purple-600" />
+                  <ExternalLink className="h-6 w-6 text-purple-600" />
                 </div>
-                <h3 className="font-semibold">Read Documentation</h3>
+                <h3 className="font-semibold">Direct Billing</h3>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Check our API docs for endpoints and examples
+                You're billed directly by OpenAI based on your usage
               </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Create API Key Form */}
-        {showCreateForm && (
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>Create New API Key</CardTitle>
-              <CardDescription>
-                Generate a new API key for accessing the RTIM API programmatically
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="keyName">Key Name</Label>
-                <Input
-                  id="keyName"
-                  placeholder="Production Server"
-                  value={newKeyName}
-                  onChange={(e) => setNewKeyName(e.target.value)}
-                />
-                <p className="text-sm text-gray-500">
-                  Give your API key a descriptive name to remember where it's used
-                </p>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button onClick={handleCreateApiKey} disabled={isCreating} className="w-full">
-                {isCreating ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating...
-                  </>
-                ) : (
-                  <>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create API Key
-                  </>
-                )}
-              </Button>
-            </CardFooter>
-          </Card>
-        )}
-
-        {/* API Keys List */}
+        {/* API Key Management */}
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>Your API Keys</CardTitle>
+            <CardTitle>Manage Your OpenAI API Key</CardTitle>
             <CardDescription>
-              Manage your API keys for programmatic access
+              Add or update your OpenAI API key to start generating videos
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            {saveMessage && (
+              <Alert className={saveMessage.type === 'success' ? 'border-green-200 bg-green-50 dark:bg-green-950/20' : 'border-red-200 bg-red-50 dark:bg-red-950/20'}>
+                {saveMessage.type === 'success' ? (
+                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                ) : (
+                  <AlertCircle className="h-4 w-4 text-red-600" />
+                )}
+                <AlertDescription className={saveMessage.type === 'success' ? 'text-green-900 dark:text-green-100' : 'text-red-900 dark:text-red-100'}>
+                  {saveMessage.text}
+                </AlertDescription>
+              </Alert>
+            )}
+
             {isLoading ? (
               <div className="flex justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
               </div>
-            ) : apiKeys.length === 0 ? (
-              <div className="text-center py-8">
-                <Key className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-xl font-semibold mb-2">No API keys yet</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">
-                  Create your first API key to start using the RTIM API
-                </p>
-                <Button onClick={() => setShowCreateForm(true)}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create API Key
-                </Button>
-              </div>
             ) : (
-              <div className="space-y-4">
-                {apiKeys.map((apiKey) => (
-                  <div
-                    key={apiKey.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold">{apiKey.name}</h3>
-                        {apiKey.lastUsed ? (
-                          <Badge variant="secondary">Active</Badge>
-                        ) : (
-                          <Badge variant="outline">Never Used</Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center space-x-3 text-sm text-gray-600 dark:text-gray-400 mb-2">
-                        <code className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded font-mono">
-                          {visibleKeys.has(apiKey.id) ? apiKey.key : maskKey(apiKey.key)}
-                        </code>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleKeyVisibility(apiKey.id)}
-                        >
-                          {visibleKeys.has(apiKey.id) ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => copyToClipboard(apiKey.key)}
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        Created {new Date(apiKey.createdAt).toLocaleDateString()}
-                        {apiKey.lastUsed && ` • Last used ${new Date(apiKey.lastUsed).toLocaleDateString()}`}
-                        {apiKey.requestCount > 0 && ` • ${apiKey.requestCount} requests`}
-                      </div>
-                    </div>
+              <>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="apiKey">OpenAI API Key</Label>
+                    {hasKey && (
+                      <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                        API Key Configured
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <Input
+                      id="apiKey"
+                      type={showKey ? 'text' : 'password'}
+                      placeholder="sk-proj-..."
+                      value={apiKey}
+                      onChange={(e) => setApiKey(e.target.value)}
+                      className="pr-10"
+                    />
                     <Button
+                      type="button"
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleDeleteApiKey(apiKey.id)}
+                      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                      onClick={() => setShowKey(!showKey)}
                     >
-                      <Trash2 className="h-4 w-4 text-red-500" />
+                      {showKey ? (
+                        <EyeOff className="h-4 w-4 text-gray-500" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-gray-500" />
+                      )}
                     </Button>
                   </div>
-                ))}
-              </div>
+                  <p className="text-sm text-gray-500">
+                    Your OpenAI API key (starts with "sk-"). Get one from{' '}
+                    <a
+                      href="https://platform.openai.com/api-keys"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline inline-flex items-center gap-1"
+                    >
+                      OpenAI Platform
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <Button onClick={handleSaveApiKey} disabled={isSaving} className="flex-1">
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Key className="mr-2 h-4 w-4" />
+                        {hasKey ? 'Update API Key' : 'Save API Key'}
+                      </>
+                    )}
+                  </Button>
+                  {hasKey && (
+                    <Button onClick={handleDeleteApiKey} variant="outline" className="text-red-600 hover:text-red-700">
+                      Remove Key
+                    </Button>
+                  )}
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
 
-        {/* API Documentation */}
+        {/* How to Get API Key */}
         <Card>
           <CardHeader>
-            <CardTitle>API Documentation</CardTitle>
-            <CardDescription>Quick reference for using the RTIM API</CardDescription>
+            <CardTitle>How to Get Your OpenAI API Key</CardTitle>
+            <CardDescription>Follow these steps to create your API key</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div>
-              <h3 className="font-semibold mb-2">Authentication</h3>
-              <pre className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto">
-                <code>{`curl https://api.rtim.app/v1/videos \\
-  -H "Authorization: Bearer YOUR_API_KEY"`}</code>
-              </pre>
-            </div>
+          <CardContent className="space-y-4">
+            <ol className="space-y-3 list-decimal list-inside text-gray-700 dark:text-gray-300">
+              <li>
+                Go to{' '}
+                <a
+                  href="https://platform.openai.com/api-keys"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline inline-flex items-center gap-1"
+                >
+                  OpenAI Platform - API Keys
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </li>
+              <li>Sign in to your OpenAI account (or create one if you don't have one)</li>
+              <li>Click "Create new secret key"</li>
+              <li>Give your key a name (e.g., "RTIM Video Generation")</li>
+              <li>Copy the key (it starts with "sk-") - you won't be able to see it again!</li>
+              <li>Paste it in the field above and click "Save API Key"</li>
+            </ol>
 
-            <div>
-              <h3 className="font-semibold mb-2">Generate Video</h3>
-              <pre className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto">
-                <code>{`POST /v1/videos
-{
-  "prompt": "A cinematic shot of a sunset",
-  "model": "sora-2",
-  "resolution": "1280x720",
-  "duration": 8
-}`}</code>
-              </pre>
-            </div>
+            <Alert className="border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20 dark:border-yellow-900">
+              <AlertCircle className="h-4 w-4 text-yellow-600" />
+              <AlertDescription className="text-yellow-900 dark:text-yellow-100">
+                <strong>Important:</strong> Make sure you have billing set up on your OpenAI account and sufficient credits. Video generation with Sora requires an active OpenAI account with available credits.
+              </AlertDescription>
+            </Alert>
 
-            <div>
-              <h3 className="font-semibold mb-2">Rate Limits</h3>
-              <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                <li>Basic: 10 requests/minute, 100 requests/hour</li>
-                <li>Pro: 30 requests/minute, 500 requests/hour</li>
-                <li>Enterprise: Custom limits</li>
-              </ul>
+            <div className="pt-4">
+              <a
+                href="https://platform.openai.com/api-keys"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button variant="outline" className="w-full">
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  Get Your OpenAI API Key
+                </Button>
+              </a>
             </div>
-
-            <Button variant="outline" className="w-full">
-              <Book className="mr-2 h-4 w-4" />
-              View Full Documentation
-            </Button>
           </CardContent>
         </Card>
       </div>

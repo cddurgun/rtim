@@ -1,49 +1,69 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-
-// Note: Install Stripe SDK with: npm install stripe
-// For now, this is a mock implementation
+import { stripe, getCreditPackage } from '@/lib/stripe'
 
 export async function POST(req: NextRequest) {
   try {
     const session = await auth()
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await req.json()
-    const { packageId: _packageId, type: _type } = body
+    const { packageId, type } = await req.json()
 
-    // TODO: Implement actual Stripe integration
-    // const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
-    //
-    // const checkoutSession = await stripe.checkout.sessions.create({
-    //   customer_email: session.user.email,
-    //   mode: type === 'subscription' ? 'subscription' : 'payment',
-    //   line_items: [
-    //     {
-    //       price: getPriceId(packageId),
-    //       quantity: 1,
-    //     },
-    //   ],
-    //   success_url: `${process.env.NEXTAUTH_URL}/billing?success=true`,
-    //   cancel_url: `${process.env.NEXTAUTH_URL}/billing?canceled=true`,
-    //   metadata: {
-    //     userId: session.user.id,
-    //     packageId,
-    //     type,
-    //   },
-    // })
-    //
-    // return NextResponse.json({ sessionUrl: checkoutSession.url })
+    // Only support credit packages for now (not subscriptions)
+    if (type !== 'credits') {
+      return NextResponse.json(
+        { error: 'Only credit packages are supported' },
+        { status: 400 }
+      )
+    }
 
-    // Mock response for demo
+    // Get package details
+    const pkg = getCreditPackage(packageId)
+
+    if (!pkg) {
+      return NextResponse.json({ error: 'Invalid package' }, { status: 400 })
+    }
+
+    // Create Stripe checkout session
+    const checkoutSession = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: pkg.name,
+              description: pkg.description,
+            },
+            unit_amount: pkg.priceUSD * 100, // Convert to cents
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/billing`,
+      client_reference_id: session.user.id,
+      metadata: {
+        userId: session.user.id,
+        packageId: pkg.id,
+        credits: pkg.credits.toString(),
+        type: 'credits',
+      },
+    })
+
     return NextResponse.json({
-      sessionUrl: '/billing?demo=true',
-      message: 'Stripe integration pending. Install stripe package and configure API keys.',
+      sessionId: checkoutSession.id,
+      sessionUrl: checkoutSession.url,
     })
   } catch (error) {
-    console.error('Stripe checkout error:', error)
-    return NextResponse.json({ error: 'Failed to create checkout session' }, { status: 500 })
+    console.error('Error creating checkout session:', error)
+    return NextResponse.json(
+      { error: 'Failed to create checkout session' },
+      { status: 500 }
+    )
   }
 }

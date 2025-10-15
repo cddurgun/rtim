@@ -37,6 +37,7 @@ enum TransactionType {
   GENERATION
   REFUND
   BONUS
+  WORKSPACE_ALLOCATION
 }
 
 model User {
@@ -44,6 +45,7 @@ model User {
   email         String    @unique
   name          String?
   image         String?
+  passwordHash  String?   @db.Text
   emailVerified DateTime?
 
   // Social Profile
@@ -54,8 +56,11 @@ model User {
   coverImage    String?
 
   // Credits and subscription
-  credits       Int       @default(100)
+  credits       Int       @default(0)
   tier          UserTier  @default(BASIC)
+
+  // OpenAI API Key (BYOK - Bring Your Own Key)
+  openaiApiKey  String?   @db.Text
 
   // Social Stats
   followersCount  Int     @default(0)
@@ -77,6 +82,7 @@ model User {
   styleProfiles StyleProfile[]
   prompts       Prompt[]
   transactions  Transaction[]
+  ownedWorkspaces Workspace[]    @relation("WorkspaceOwner")
   workspaces    WorkspaceMember[]
   videoLikes    VideoLike[]
   videoComments VideoComment[]
@@ -85,6 +91,8 @@ model User {
   videoViews    VideoView[]
   behaviorPatterns UserBehaviorPattern[]
   generationFailures GenerationFailure[]
+  notifications Notification[]
+  apiKeys       ApiKey[]
 
   @@index([email])
   @@index([tier])
@@ -294,6 +302,9 @@ model Workspace {
   name        String
   slug        String            @unique
 
+  // Owner
+  ownerId     String
+
   // Resources
   sharedCredits Int             @default(0)
 
@@ -305,10 +316,12 @@ model Workspace {
   updatedAt   DateTime          @updatedAt
 
   // Relations
+  owner       User              @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   members     WorkspaceMember[]
   videos      Video[]
 
   @@index([slug])
+  @@index([ownerId])
 }
 
 enum WorkspaceRole {
@@ -531,4 +544,77 @@ model ABTest {
 
   @@index([testName])
   @@index([isActive])
+}
+
+// Notification Types
+enum NotificationType {
+  LIKE            // Someone liked your video
+  COMMENT         // Someone commented on your video
+  REPLY           // Someone replied to your comment
+  FOLLOW          // Someone followed you
+  MENTION         // Someone mentioned you
+  VIDEO_READY     // Your video generation is complete
+  CREDIT_LOW      // Your credits are running low
+  SYSTEM          // System notifications
+}
+
+// Notifications
+model Notification {
+  id              String           @id @default(cuid())
+
+  // Notification details
+  type            NotificationType
+  title           String
+  message         String           @db.Text
+
+  // Status
+  isRead          Boolean          @default(false)
+
+  // Context (optional)
+  videoId         String?
+  commentId       String?
+  actorId         String?          // User who triggered the notification
+  actionUrl       String?          // URL to navigate to
+
+  // Additional data
+  metadata        Json?            // Any additional contextual data
+
+  // Relations
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+
+  // Timestamps
+  createdAt       DateTime         @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@index([type])
+}
+
+// API Keys for programmatic access
+model ApiKey {
+  id           String    @id @default(cuid())
+
+  // Key details
+  name         String
+  key          String    @unique
+
+  // Usage tracking
+  lastUsed     DateTime?
+  requestCount Int       @default(0)
+
+  // Expiration
+  expiresAt    DateTime?
+
+  // Relations
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
+
+  // Timestamps
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([key])
 }

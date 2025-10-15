@@ -29,78 +29,17 @@ interface Transaction {
 
 const creditPackages: CreditPackage[] = [
   {
-    id: 'starter',
-    name: 'Starter',
-    credits: 100,
+    id: 'standard',
+    name: 'Standard Package',
+    credits: 50,
     price: 15,
     bonus: 0,
-    icon: Zap,
-  },
-  {
-    id: 'pro',
-    name: 'Pro',
-    credits: 500,
-    price: 60,
-    bonus: 50,
     popular: true,
-    icon: Crown,
-  },
-  {
-    id: 'business',
-    name: 'Business',
-    credits: 2000,
-    price: 200,
-    bonus: 300,
-    icon: Rocket,
+    icon: Zap,
   },
 ]
 
-const subscriptionPlans = [
-  {
-    id: 'basic',
-    name: 'Basic',
-    price: 29,
-    credits: 200,
-    features: [
-      '200 credits/month',
-      '5 concurrent jobs',
-      'Standard support',
-      'All models access',
-      'Basic analytics',
-    ],
-  },
-  {
-    id: 'pro',
-    name: 'Pro',
-    price: 99,
-    credits: 800,
-    features: [
-      '800 credits/month',
-      '10 concurrent jobs',
-      'Priority queue',
-      'Advanced features',
-      'Team collaboration',
-      'API access',
-      'Advanced analytics',
-    ],
-    popular: true,
-  },
-  {
-    id: 'enterprise',
-    name: 'Enterprise',
-    price: 299,
-    credits: 3000,
-    features: [
-      '3000 credits/month',
-      'Unlimited concurrent jobs',
-      'Dedicated support',
-      'Custom integrations',
-      'White-label options',
-      'SLA guarantee',
-      'Advanced security',
-    ],
-  },
-]
+// Subscriptions removed - only one-time credit purchases available
 
 export default function BillingPage() {
   const { data: session, status } = useSession()
@@ -173,7 +112,7 @@ export default function BillingPage() {
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Credits & Billing</h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Manage your credits, subscriptions, and billing information
+            Purchase credits to create AI-generated videos
           </p>
         </div>
 
@@ -188,20 +127,15 @@ export default function BillingPage() {
                 <div className="flex items-center space-x-3">
                   <Coins className="h-8 w-8 text-blue-600" />
                   <div className="text-5xl font-bold text-blue-900 dark:text-blue-100">
-                    {session?.user?.credits || 100}
+                    {session?.user?.credits || 0}
                   </div>
                   <div className="text-2xl text-gray-600">credits</div>
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                  Approximately {((session?.user?.credits || 100) / 10).toFixed(0)} seconds of video at standard quality
-                </div>
-              </div>
-              <div className="text-right">
-                <Badge className="mb-2">
-                  {session?.user?.tier || 'BASIC'} Plan
-                </Badge>
-                <div className="text-sm text-gray-600 dark:text-gray-400">
-                  Next renewal: {new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}
+                  {(session?.user?.credits || 0) > 0
+                    ? `Can create ${Math.floor((session?.user?.credits || 0) / 10)} videos (10 seconds each)`
+                    : 'Purchase credits below to start creating videos'
+                  }
                 </div>
               </div>
             </div>
@@ -210,14 +144,17 @@ export default function BillingPage() {
 
         {/* Credit Packages */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold mb-6">Buy Credits</h2>
-          <div className="grid md:grid-cols-3 gap-6">
+          <h2 className="text-2xl font-bold mb-2">Buy Credits</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            50 credits = 5 videos of 10 seconds each • $0.30 per credit
+          </p>
+          <div className="flex justify-center">
             {creditPackages.map((pkg) => {
               const Icon = pkg.icon
               return (
                 <Card
                   key={pkg.id}
-                  className={`relative hover:shadow-xl transition-all ${
+                  className={`relative hover:shadow-xl transition-all max-w-md w-full ${
                     pkg.popular ? 'border-2 border-blue-500 shadow-lg' : ''
                   }`}
                 >
@@ -233,7 +170,7 @@ export default function BillingPage() {
                       </div>
                     </div>
                     <CardTitle className="text-2xl">{pkg.name}</CardTitle>
-                    <CardDescription>Perfect for getting started</CardDescription>
+                    <CardDescription>Create 5 videos of 10 seconds each</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="mb-6">
@@ -250,11 +187,19 @@ export default function BillingPage() {
                     <ul className="space-y-2 mb-6">
                       <li className="flex items-center text-sm">
                         <Check className="h-4 w-4 text-green-600 mr-2" />
+                        50 credits (5 videos × 10 seconds)
+                      </li>
+                      <li className="flex items-center text-sm">
+                        <Check className="h-4 w-4 text-green-600 mr-2" />
                         One-time purchase
                       </li>
                       <li className="flex items-center text-sm">
                         <Check className="h-4 w-4 text-green-600 mr-2" />
                         Credits never expire
+                      </li>
+                      <li className="flex items-center text-sm">
+                        <Check className="h-4 w-4 text-green-600 mr-2" />
+                        $0.30 per credit (flat rate)
                       </li>
                       <li className="flex items-center text-sm">
                         <Check className="h-4 w-4 text-green-600 mr-2" />
@@ -285,70 +230,6 @@ export default function BillingPage() {
                 </Card>
               )
             })}
-          </div>
-        </div>
-
-        {/* Subscription Plans */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold mb-2">Subscription Plans</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Save up to 30% with monthly subscriptions
-          </p>
-          <div className="grid md:grid-cols-3 gap-6">
-            {subscriptionPlans.map((plan) => (
-              <Card
-                key={plan.id}
-                className={`relative hover:shadow-xl transition-all ${
-                  plan.popular ? 'border-2 border-purple-500 shadow-lg' : ''
-                }`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <Badge className="bg-purple-500 text-white">Best Value</Badge>
-                  </div>
-                )}
-                <CardHeader>
-                  <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                  <CardDescription>Monthly subscription</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="mb-6">
-                    <div className="text-4xl font-bold mb-2">
-                      ${plan.price}
-                      <span className="text-lg text-gray-600 font-normal">/month</span>
-                    </div>
-                    <div className="text-gray-600 dark:text-gray-400">
-                      {plan.credits} credits/month
-                    </div>
-                  </div>
-                  <ul className="space-y-3">
-                    {plan.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-start text-sm">
-                        <Check className="h-4 w-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-                <CardFooter>
-                  <Button
-                    className="w-full"
-                    variant={plan.popular ? 'default' : 'outline'}
-                    onClick={() => handlePurchase(plan.id, 'subscription')}
-                    disabled={isPurchasing === plan.id}
-                  >
-                    {isPurchasing === plan.id ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Processing...
-                      </>
-                    ) : (
-                      'Subscribe Now'
-                    )}
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
           </div>
         </div>
 

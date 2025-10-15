@@ -2,29 +2,93 @@ import NextAuth from 'next-auth'
 import type { NextAuthConfig } from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import { prisma } from './prisma'
+import bcrypt from 'bcryptjs'
 
-// Simplified auth config that works without a database
-// When you add a database, add the PrismaAdapter and database-related code
 export const authConfig = {
   providers: [
-    // Demo credentials provider (remove in production)
     Credentials({
-      name: 'Demo Account',
+      name: 'Credentials',
       credentials: {
-        email: { label: "Email", type: "email", placeholder: "demo@rtim.app" },
+        email: { label: "Email", type: "email", placeholder: "you@example.com" },
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        // This is just for demo - remove in production!
-        if (credentials?.email === 'demo@rtim.ai' && credentials?.password === 'demo123') {
+        if (!credentials?.email || !credentials?.password) {
+          return null
+        }
+
+        // Check for demo account first (for backward compatibility)
+        if (credentials.email === 'demo@rtim.app' && credentials.password === 'demo123') {
+          // Try to find or create demo user in database
+          let demoUser = await prisma.user.findUnique({
+            where: { email: 'demo@rtim.app' },
+          })
+
+          if (!demoUser) {
+            // Create demo user if doesn't exist
+            const passwordHash = await bcrypt.hash('demo123', 12)
+            demoUser = await prisma.user.create({
+              data: {
+                email: 'demo@rtim.app',
+                name: 'Demo User',
+                passwordHash,
+                credits: 1000, // Give demo user more credits
+                tier: 'PRO',
+              },
+            })
+          }
+
           return {
-            id: 'demo-user',
-            email: 'demo@rtim.ai',
-            name: 'Demo User',
-            image: null,
+            id: demoUser.id,
+            email: demoUser.email,
+            name: demoUser.name,
+            image: demoUser.image,
           }
         }
-        return null
+
+        // Check database for real users
+        try {
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              image: true,
+              passwordHash: true,
+            },
+          })
+
+          if (!user || !user.passwordHash) {
+            return null
+          }
+
+          // Verify password
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password,
+            user.passwordHash
+          )
+
+          if (!isPasswordValid) {
+            return null
+          }
+
+          // Update last active timestamp
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { lastActiveAt: new Date() },
+          })
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            image: user.image,
+          }
+        } catch (error) {
+          console.error('Auth error:', error)
+          return null
+        }
       }
     }),
     // Uncomment when you add OAuth credentials
@@ -61,13 +125,13 @@ export const authConfig = {
             session.user.credits = dbUser.credits
             session.user.tier = dbUser.tier
           } else {
-            // Fallback if user not in DB
-            session.user.credits = 100
+            // Fallback if user not in DB (no starter credits)
+            session.user.credits = 0
             session.user.tier = 'BASIC'
           }
         } catch (error) {
           console.error('Error fetching user from database:', error)
-          session.user.credits = 100
+          session.user.credits = 0
           session.user.tier = 'BASIC'
         }
       }

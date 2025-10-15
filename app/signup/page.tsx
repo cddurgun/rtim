@@ -36,32 +36,26 @@ export default function SignUpPage() {
       return
     }
 
-    // Since we don't have a database yet, show a message
-    // In production, you'd call an API to create the user
-    setTimeout(() => {
-      setError('Sign up is coming soon! For now, use the demo account on the sign-in page.')
-      setIsLoading(false)
-    }, 1000)
+    try {
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
+      })
 
-    // TODO: Implement actual sign-up when database is ready
-    // try {
-    //   const response = await fetch('/api/auth/signup', {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify({ name, email, password }),
-    //   })
-    //
-    //   if (response.ok) {
-    //     router.push('/signin?registered=true')
-    //   } else {
-    //     const data = await response.json()
-    //     setError(data.error || 'Sign up failed')
-    //   }
-    // } catch (error) {
-    //   setError('An error occurred. Please try again.')
-    // } finally {
-    //   setIsLoading(false)
-    // }
+      const data = await response.json()
+
+      if (response.ok) {
+        // Successfully created account, redirect to sign-in
+        router.push('/signin?registered=true')
+      } else {
+        setError(data.error || 'Sign up failed')
+      }
+    } catch (error) {
+      setError('An error occurred. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (

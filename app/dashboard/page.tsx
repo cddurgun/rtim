@@ -7,6 +7,9 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Loader2, TrendingUp, Users, Sparkles } from 'lucide-react'
 import { VideoCard } from '@/components/feed/video-card'
+import { VideoCardSkeleton } from '@/components/feed/video-card-skeleton'
+import { useInView } from 'react-intersection-observer'
+import { toast } from '@/lib/utils/toast'
 
 interface FeedVideo {
   id: string
@@ -19,6 +22,7 @@ interface FeedVideo {
   commentsCount: number
   sharesCount: number
   isLiked: boolean
+  tags?: string[]
   createdAt: string
   user: {
     id: string
@@ -37,13 +41,32 @@ export default function DashboardPage() {
   const [feedType, setFeedType] = useState<FeedType>('forYou')
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+
+  // Intersection observer for infinite scroll
+  const { ref: loadMoreRef, inView } = useInView({
+    threshold: 0,
+    triggerOnce: false,
+  })
 
   useEffect(() => {
-    fetchFeed()
+    fetchFeed(1)
   }, [feedType])
 
+  // Trigger load more when inView changes
+  useEffect(() => {
+    if (inView && hasMore && !isLoading && !isLoadingMore) {
+      handleLoadMore()
+    }
+  }, [inView, hasMore, isLoading, isLoadingMore])
+
   const fetchFeed = async (pageNum = 1) => {
-    setIsLoading(true)
+    if (pageNum === 1) {
+      setIsLoading(true)
+    } else {
+      setIsLoadingMore(true)
+    }
+
     try {
       const response = await fetch(`/api/feed?type=${feedType}&page=${pageNum}&limit=12`)
 
@@ -60,20 +83,26 @@ export default function DashboardPage() {
         setPage(pageNum)
       } else {
         // If API fails, show empty state
-        setVideos([])
+        if (pageNum === 1) {
+          setVideos([])
+        }
         setHasMore(false)
       }
     } catch (error) {
       console.error('Failed to fetch feed:', error)
-      setVideos([])
+      if (pageNum === 1) {
+        setVideos([])
+      }
       setHasMore(false)
+      toast.error('Failed to load feed')
     } finally {
       setIsLoading(false)
+      setIsLoadingMore(false)
     }
   }
 
   const handleLoadMore = () => {
-    if (!isLoading && hasMore) {
+    if (!isLoading && !isLoadingMore && hasMore) {
       fetchFeed(page + 1)
     }
   }
@@ -98,11 +127,24 @@ export default function DashboardPage() {
     )
   }
 
-  const handleShare = (videoId: string) => {
+  const handleShare = async (videoId: string) => {
     const url = `${window.location.origin}/videos/${videoId}`
-    navigator.clipboard.writeText(url)
-    // TODO: Show toast notification
-    alert('Video link copied to clipboard!')
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Check out this AI-generated video',
+          url,
+        })
+        toast.shared()
+        return
+      } catch (err) {
+        // User cancelled
+      }
+    }
+
+    await navigator.clipboard.writeText(url)
+    toast.copied()
   }
 
   const handleTabChange = (value: string) => {
@@ -157,8 +199,10 @@ export default function DashboardPage() {
 
           <TabsContent value={feedType} className="mt-6">
             {isLoading && page === 1 ? (
-              <div className="flex items-center justify-center py-20">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <VideoCardSkeleton key={i} />
+                ))}
               </div>
             ) : videos.length === 0 ? (
               <div className="text-center py-20">
@@ -185,24 +229,23 @@ export default function DashboardPage() {
                   ))}
                 </div>
 
-                {/* Load More Button */}
+                {/* Infinite Scroll Trigger */}
                 {hasMore && (
-                  <div className="flex justify-center mt-8">
-                    <Button
-                      onClick={handleLoadMore}
-                      disabled={isLoading}
-                      size="lg"
-                      variant="outline"
-                    >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Loading...
-                        </>
-                      ) : (
-                        'Load More'
-                      )}
-                    </Button>
+                  <div ref={loadMoreRef} className="flex justify-center mt-8 py-8">
+                    {isLoadingMore && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+                        {[1, 2, 3].map((i) => (
+                          <VideoCardSkeleton key={i} />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* End of Feed */}
+                {!hasMore && videos.length > 0 && (
+                  <div className="text-center py-12 text-gray-500">
+                    <p>You've reached the end!</p>
                   </div>
                 )}
               </>

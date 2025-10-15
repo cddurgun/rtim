@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { notifyVideoComment, notifyCommentReply } from '@/lib/notifications'
 
 const commentSchema = z.object({
   content: z.string().min(1).max(1000),
@@ -119,9 +120,13 @@ export async function POST(
     }
 
     // If replying to a comment, check if parent exists
+    let parentComment = null
     if (validatedData.parentId) {
-      const parentComment = await prisma.videoComment.findUnique({
+      parentComment = await prisma.videoComment.findUnique({
         where: { id: validatedData.parentId },
+        include: {
+          user: true,
+        },
       })
 
       if (!parentComment) {
@@ -157,6 +162,34 @@ export async function POST(
         data: { commentsCount: { increment: 1 } },
       }),
     ])
+
+    // Create notifications
+    if (parentComment) {
+      // Reply notification
+      if (parentComment.userId !== session.user.id) {
+        await notifyCommentReply(
+          parentComment.userId,
+          session.user.name || 'Someone',
+          session.user.id,
+          videoId,
+          comment.id,
+          validatedData.content
+        )
+      }
+    } else {
+      // New comment notification
+      if (video.userId !== session.user.id) {
+        await notifyVideoComment(
+          video.userId,
+          session.user.name || 'Someone',
+          session.user.id,
+          videoId,
+          video.originalPrompt,
+          comment.id,
+          validatedData.content
+        )
+      }
+    }
 
     return NextResponse.json({
       success: true,

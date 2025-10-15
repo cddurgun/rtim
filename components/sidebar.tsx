@@ -21,10 +21,13 @@ import {
   User,
   Bell,
   ChevronRight,
-  Coins
+  Coins,
+  Search,
+  Compass
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { NotificationCenter } from '@/components/notifications/notification-center'
 
 interface NavItem {
   name: string
@@ -35,13 +38,14 @@ interface NavItem {
 
 const navigation: NavItem[] = [
   { name: 'Home', href: '/', icon: Home },
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Explore', href: '/explore', icon: Compass },
   { name: 'Generate', href: '/generate', icon: Play },
   { name: 'My Videos', href: '/videos', icon: Video },
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Style Profiles', href: '/profiles', icon: Palette },
   { name: 'Workspaces', href: '/workspaces', icon: Users },
   { name: 'Credits & Billing', href: '/billing', icon: CreditCard },
-  { name: 'API Access', href: '/api-access', icon: Key },
+  { name: 'OpenAI API Key', href: '/api-access', icon: Key },
 ]
 
 const accountNavigation: NavItem[] = [
@@ -106,16 +110,19 @@ export default function Sidebar() {
                 <Sparkles className="h-6 w-6 text-blue-600" />
               </Link>
             )}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              className="hidden lg:flex"
-            >
-              <ChevronRight
-                className={`h-4 w-4 transition-transform ${isCollapsed ? '' : 'rotate-180'}`}
-              />
-            </Button>
+            <div className="flex items-center gap-2">
+              {session?.user && <NotificationCenter />}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                className="hidden lg:flex"
+              >
+                <ChevronRight
+                  className={`h-4 w-4 transition-transform ${isCollapsed ? '' : 'rotate-180'}`}
+                />
+              </Button>
+            </div>
           </div>
 
           {/* User info with credits */}
@@ -133,19 +140,19 @@ export default function Sidebar() {
                   <p className="text-xs text-gray-500 truncate">{session.user.email}</p>
                 </div>
               </div>
-              <div className="flex items-center justify-between bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <Coins className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-semibold text-blue-900 dark:text-blue-100">
-                    {session.user.credits || 100}
-                  </span>
-                </div>
-                <Link href="/billing">
-                  <Button variant="ghost" size="sm" className="h-6 text-xs">
-                    Buy More
+              <Link href="/api-access" className="block">
+                <div className="flex items-center justify-between bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+                  <div className="flex items-center space-x-2">
+                    <Key className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                      BYOK
+                    </span>
+                  </div>
+                  <Button variant="ghost" size="sm" className="h-6 text-xs pointer-events-none">
+                    API Key
                   </Button>
-                </Link>
-              </div>
+                </div>
+              </Link>
             </div>
           )}
 

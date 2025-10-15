@@ -6,7 +6,9 @@ import { Heart, MessageCircle, Share2, Play, Pause } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { formatDistanceToNow } from 'date-fns'
+import { toast } from '@/lib/utils/toast'
 
 interface VideoCardProps {
   video: {
@@ -20,6 +22,7 @@ interface VideoCardProps {
     commentsCount: number
     sharesCount: number
     isLiked: boolean
+    tags?: string[]
     createdAt: string
     user: {
       id: string
@@ -37,6 +40,7 @@ export function VideoCard({ video, onLike, onShare }: VideoCardProps) {
   const [likesCount, setLikesCount] = useState(video.likesCount)
   const [isLiking, setIsLiking] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [videoError, setVideoError] = useState(false)
 
   const handleLike = async () => {
     if (isLiking) return
@@ -73,14 +77,31 @@ export function VideoCard({ video, onLike, onShare }: VideoCardProps) {
     }
   }
 
-  const handleShare = () => {
+  const handleShare = async () => {
     if (onShare) {
       onShare(video.id)
     } else {
       // Default share behavior
       const url = `${window.location.origin}/videos/${video.id}`
-      navigator.clipboard.writeText(url)
-      // TODO: Show toast notification
+
+      // Try native share API first
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: `Video by ${displayName}`,
+            text: video.originalPrompt,
+            url,
+          })
+          toast.shared()
+          return
+        } catch (err) {
+          // User cancelled or share failed, fall back to copy
+        }
+      }
+
+      // Fallback to copy to clipboard
+      await navigator.clipboard.writeText(url)
+      toast.copied()
     }
   }
 
@@ -91,36 +112,67 @@ export function VideoCard({ video, onLike, onShare }: VideoCardProps) {
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
       {/* Video Section */}
       <div className="relative aspect-video bg-black group">
-        <video
-          src={video.videoUrl}
-          poster={video.thumbnailUrl || undefined}
-          className="w-full h-full object-contain"
-          loop
-          playsInline
-          onPlay={() => setIsPlaying(true)}
-          onPause={() => setIsPlaying(false)}
-          onClick={(e) => {
-            const videoEl = e.currentTarget
-            if (videoEl.paused) {
-              videoEl.play()
-            } else {
-              videoEl.pause()
-            }
-          }}
-        />
+        {!videoError ? (
+          <video
+            src={video.videoUrl}
+            poster={video.thumbnailUrl || undefined}
+            className="w-full h-full object-contain"
+            loop
+            muted
+            playsInline
+            preload="metadata"
+            onPlay={() => setIsPlaying(true)}
+            onPause={() => setIsPlaying(false)}
+            onError={(e) => {
+              // Only log if we have a videoUrl (suppress errors for missing/invalid URLs)
+              if (video.videoUrl && video.videoUrl.startsWith('http')) {
+                console.warn('Video failed to load:', video.videoUrl)
+              }
+              setVideoError(true)
+              setIsPlaying(false)
+            }}
+            onClick={(e) => {
+              e.preventDefault()
+              const videoEl = e.currentTarget
+
+              // Check if video source is valid
+              if (!video.videoUrl) {
+                return
+              }
+
+              if (videoEl.paused) {
+                // Try to play, catch any errors
+                videoEl.play().catch(() => {
+                  // Silently fail - video might not be ready yet
+                })
+              } else {
+                videoEl.pause()
+              }
+            }}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gray-900">
+            <div className="text-center text-gray-400">
+              <Play className="h-16 w-16 mx-auto mb-2 opacity-30" />
+              <p className="text-sm">Video unavailable</p>
+            </div>
+          </div>
+        )}
 
         {/* Play/Pause Overlay */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-          {isPlaying ? (
-            <div className="bg-black/50 rounded-full p-4">
-              <Pause className="h-12 w-12 text-white" />
-            </div>
-          ) : (
-            <div className="bg-black/50 rounded-full p-4">
-              <Play className="h-12 w-12 text-white" />
-            </div>
-          )}
-        </div>
+        {!videoError && (
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            {isPlaying ? (
+              <div className="bg-black/50 rounded-full p-4">
+                <Pause className="h-12 w-12 text-white" />
+              </div>
+            ) : (
+              <div className="bg-black/50 rounded-full p-4">
+                <Play className="h-12 w-12 text-white" />
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Duration Badge */}
         <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
@@ -151,6 +203,27 @@ export function VideoCard({ video, onLike, onShare }: VideoCardProps) {
 
         {/* Prompt */}
         <p className="text-sm mb-3 line-clamp-2">{video.originalPrompt}</p>
+
+        {/* Tags */}
+        {video.tags && video.tags.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-3">
+            {video.tags.slice(0, 3).map((tag) => (
+              <Link key={tag} href={`/tags/${encodeURIComponent(tag)}`} onClick={(e) => e.stopPropagation()}>
+                <Badge
+                  variant="secondary"
+                  className="text-xs cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors"
+                >
+                  #{tag}
+                </Badge>
+              </Link>
+            ))}
+            {video.tags.length > 3 && (
+              <Badge variant="outline" className="text-xs">
+                +{video.tags.length - 3}
+              </Badge>
+            )}
+          </div>
+        )}
 
         {/* Action Buttons */}
         <div className="flex items-center gap-1">

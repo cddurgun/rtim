@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { notifyVideoLike } from '@/lib/notifications'
 
 export async function POST(
   req: NextRequest,
@@ -57,6 +58,17 @@ export async function POST(
         data: { totalLikes: { increment: 1 } },
       }),
     ])
+
+    // Create notification for video owner
+    if (video.userId !== session.user.id) {
+      await notifyVideoLike(
+        video.userId,
+        session.user.name || 'Someone',
+        session.user.id,
+        videoId,
+        video.originalPrompt
+      )
+    }
 
     return NextResponse.json({
       success: true,

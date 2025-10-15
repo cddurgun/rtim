@@ -16,7 +16,7 @@ export default function PreferencesSettingsPage() {
   const [preferences, setPreferences] = useState({
     defaultModel: 'SORA_2',
     defaultResolution: '1280x720',
-    defaultDuration: '8',
+    defaultDuration: '10',
     theme: 'system',
     language: 'en',
     autoEnhancePrompts: true,
@@ -94,8 +94,7 @@ export default function PreferencesSettingsPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="SORA_2">Sora-2 (Standard)</SelectItem>
-                    <SelectItem value="SORA_2_PRO">Sora-2 Pro (Premium)</SelectItem>
+                    <SelectItem value="SORA_2">Sora-2</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -127,11 +126,7 @@ export default function PreferencesSettingsPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="4">4 seconds</SelectItem>
-                    <SelectItem value="8">8 seconds</SelectItem>
-                    <SelectItem value="12">12 seconds</SelectItem>
-                    <SelectItem value="16">16 seconds</SelectItem>
-                    <SelectItem value="20">20 seconds</SelectItem>
+                    <SelectItem value="10">10 seconds</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

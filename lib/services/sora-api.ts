@@ -10,6 +10,7 @@ export class SoraAPI {
     size: string
     seconds: number
     inputReference?: Buffer
+    apiKey: string  // User's OpenAI API key
   }): Promise<SoraJobResponse> {
     try {
       const formData = new FormData()
@@ -26,7 +27,7 @@ export class SoraAPI {
       const response = await fetch('https://api.openai.com/v1/videos', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Authorization': `Bearer ${params.apiKey}`,
         },
         body: formData,
       })
@@ -47,11 +48,11 @@ export class SoraAPI {
   /**
    * Get the status of a video generation job
    */
-  static async getVideoStatus(videoId: string): Promise<SoraJobResponse> {
+  static async getVideoStatus(videoId: string, apiKey: string): Promise<SoraJobResponse> {
     try {
       const response = await fetch(`https://api.openai.com/v1/videos/${videoId}`, {
         headers: {
-          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Authorization': `Bearer ${apiKey}`,
         },
       })
 
@@ -70,7 +71,7 @@ export class SoraAPI {
   /**
    * Download video content
    */
-  static async downloadVideo(videoId: string, variant: 'video' | 'thumbnail' | 'spritesheet' = 'video'): Promise<Buffer> {
+  static async downloadVideo(videoId: string, apiKey: string, variant: 'video' | 'thumbnail' | 'spritesheet' = 'video'): Promise<Buffer> {
     try {
       const url = variant === 'video'
         ? `https://api.openai.com/v1/videos/${videoId}/content`
@@ -78,7 +79,7 @@ export class SoraAPI {
 
       const response = await fetch(url, {
         headers: {
-          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Authorization': `Bearer ${apiKey}`,
         },
       })
 
@@ -98,12 +99,12 @@ export class SoraAPI {
   /**
    * Remix an existing video
    */
-  static async remixVideo(videoId: string, prompt: string): Promise<SoraJobResponse> {
+  static async remixVideo(videoId: string, prompt: string, apiKey: string): Promise<SoraJobResponse> {
     try {
       const response = await fetch(`https://api.openai.com/v1/videos/${videoId}/remix`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ prompt }),
@@ -124,12 +125,12 @@ export class SoraAPI {
   /**
    * Delete a video
    */
-  static async deleteVideo(videoId: string): Promise<void> {
+  static async deleteVideo(videoId: string, apiKey: string): Promise<void> {
     try {
       const response = await fetch(`https://api.openai.com/v1/videos/${videoId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Authorization': `Bearer ${apiKey}`,
         },
       })
 
@@ -148,6 +149,7 @@ export class SoraAPI {
    */
   static async pollVideoCompletion(
     videoId: string,
+    apiKey: string,
     options: {
       maxAttempts?: number
       intervalMs?: number
@@ -157,7 +159,7 @@ export class SoraAPI {
     const { maxAttempts = 60, intervalMs = 5000, onProgress } = options
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      const status = await this.getVideoStatus(videoId)
+      const status = await this.getVideoStatus(videoId, apiKey)
 
       if (onProgress && status.progress) {
         onProgress(status.progress)

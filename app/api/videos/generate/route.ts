@@ -24,6 +24,20 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validatedData = generateVideoSchema.parse(body)
 
+    // Get user's OpenAI API key from database
+    const { prisma } = await import('@/lib/prisma')
+    const userData = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { openaiApiKey: true },
+    })
+
+    if (!userData?.openaiApiKey) {
+      return NextResponse.json(
+        { error: 'OpenAI API key not configured. Please add your API key in Settings > OpenAI API Key.' },
+        { status: 400 }
+      )
+    }
+
     // Calculate credit cost
     const creditCost = VideoService.calculateCreditCost({
       model: validatedData.model as VideoModel,
@@ -40,12 +54,13 @@ export async function POST(request: NextRequest) {
     // Use enhanced prompt if available, otherwise use original
     const finalPrompt = validatedData.enhancedPrompt || validatedData.prompt
 
-    // Create video job in Sora API
+    // Create video job in Sora API using user's API key
     const soraResponse = await SoraAPI.createVideo({
       prompt: finalPrompt,
       model: soraModel,
       size: validatedData.size,
       seconds: validatedData.duration,
+      apiKey: userData.openaiApiKey,
     })
 
     // Save video record to database

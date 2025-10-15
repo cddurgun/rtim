@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react'
 import { usePathname } from 'next/navigation'
 import Sidebar from './sidebar'
+import { Toaster } from './ui/toaster'
 
 interface AppLayoutProps {
   children: React.ReactNode
@@ -21,7 +22,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
     !NO_SIDEBAR_PAGES.includes(pathname || '')
 
   if (!showSidebar) {
-    return <>{children}</>
+    return (
+      <>
+        {children}
+        <Toaster />
+      </>
+    )
   }
 
   return (
@@ -30,6 +36,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
       <main className="flex-1 overflow-y-auto">
         {children}
       </main>
+      <Toaster />
     </div>
   )
 }
