@@ -40,13 +40,13 @@ export async function POST(request: NextRequest) {
     // Hash password
     const passwordHash = await bcrypt.hash(password, 12)
 
-    // Create user with 0 credits (no starter credits)
+    // Create user with 100 free starter credits
     const user = await prisma.user.create({
       data: {
         name,
         email,
         passwordHash,
-        credits: 0,
+        credits: 100,
         tier: 'BASIC',
       },
       select: {
