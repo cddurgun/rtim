@@ -6,13 +6,13 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, Key, Eye, EyeOff, ExternalLink, CheckCircle2, AlertCircle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 export default function ApiAccessPage() {
-  const { data: session, status } = useSession()
+  const { status } = useSession()
   const router = useRouter()
   const [apiKey, setApiKey] = useState('')
   const [isLoading, setIsLoading] = useState(true)
@@ -176,7 +176,7 @@ export default function ApiAccessPage() {
                 <h3 className="font-semibold">Direct Billing</h3>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                You're billed directly by OpenAI based on your usage
+                You&apos;re billed directly by OpenAI based on your usage
               </p>
             </CardContent>
           </Card>
@@ -244,7 +244,7 @@ export default function ApiAccessPage() {
                     </Button>
                   </div>
                   <p className="text-sm text-gray-500">
-                    Your OpenAI API key (starts with "sk-"). Get one from{' '}
+                    Your OpenAI API key (starts with &quot;sk-&quot;). Get one from{' '}
                     <a
                       href="https://platform.openai.com/api-keys"
                       target="_blank"
@@ -302,11 +302,11 @@ export default function ApiAccessPage() {
                   <ExternalLink className="h-3 w-3" />
                 </a>
               </li>
-              <li>Sign in to your OpenAI account (or create one if you don't have one)</li>
-              <li>Click "Create new secret key"</li>
-              <li>Give your key a name (e.g., "RTIM Video Generation")</li>
-              <li>Copy the key (it starts with "sk-") - you won't be able to see it again!</li>
-              <li>Paste it in the field above and click "Save API Key"</li>
+              <li>Sign in to your OpenAI account (or create one if you don&apos;t have one)</li>
+              <li>Click &quot;Create new secret key&quot;</li>
+              <li>Give your key a name (e.g., &quot;RTIM Video Generation&quot;)</li>
+              <li>Copy the key (it starts with &quot;sk-&quot;) - you won&apos;t be able to see it again!</li>
+              <li>Paste it in the field above and click &quot;Save API Key&quot;</li>
             </ol>
 
             <Alert className="border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20 dark:border-yellow-900">

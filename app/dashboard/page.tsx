@@ -245,7 +245,7 @@ export default function DashboardPage() {
                 {/* End of Feed */}
                 {!hasMore && videos.length > 0 && (
                   <div className="text-center py-12 text-gray-500">
-                    <p>You've reached the end!</p>
+                    <p>You&apos;ve reached the end!</p>
                   </div>
                 )}
               </>

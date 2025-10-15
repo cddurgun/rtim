@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
-import { Loader2, Check, Zap, Crown, Rocket, CreditCard, Download, Calendar, TrendingUp, Coins } from 'lucide-react'
+import { Loader2, Check, Zap, CreditCard, Download, TrendingUp, Coins } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 
 interface CreditPackage {

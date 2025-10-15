@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -10,7 +10,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { VideoCard } from '@/components/feed/video-card'
 import { VideoCardSkeleton } from '@/components/feed/video-card-skeleton'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Search, TrendingUp, Hash, Users, Video, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from '@/lib/utils/toast'
@@ -50,7 +49,6 @@ interface SearchResults {
 }
 
 export default function ExplorePage() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const initialQuery = searchParams.get('q') || ''
 
